@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>菜鸟教程(runoob.com)</title>
+<script src="http://ip.ws.1 26.net/ipquery"></script>
+<script type="text/javascript">
+    dynamicIp(lc);//这是获取天气调用的方法 lc就是城市名称
+</script>
+
+<style>
+	body{
+		height: 100%;
+		  width: 100%;
+		  background: url('img/s.jpg') no-repeat;
+		  background-size: cover;
+		  position: absolute;
+		  overflow: hidden;
+	}
+	
+	p{
+		text-align: center;
+		color: azure;
+		font-size: 40px;
+		font:italic bold 40px "楷体" ;
+	}
+	#p{
+	
+		color: cornsilk;
+		
+	}
+</style>
+</head>
+<body>
+
+<p id="demo"></p>
+<p id="weather1"></p>
+<script>
+	function mytime(){
+		var d=new Date();
+		var years=d.getFullYear();
+		var month=d.getMonth();
+		var date=d.getDate()
+		var hour=d.getHours();
+		var Minute=d.getMinutes();
+		var seconds=d.getSeconds();
+		 seconds = seconds < 10 ? '0' + seconds : seconds;
+		var day=d.getDay(); 
+		var dayx;
+		if(day==1)
+		{
+			dayx="星期一";
+		}
+		if(day==2)
+		{
+			dayx="星期二";
+		}
+		if(day==3)
+		{
+			dayx="星期三";
+		}
+		if(day==4)
+		{
+			dayx="星期四";
+		}
+		if(day==5)
+		{
+			dayx="星期五";
+		}
+		if(day==6)
+		{
+			dayx="星期六";
+		}
+		if(day==7)
+		{
+			dayx="星期天"
+		}
+		return years+"年"+month+"月"+date+"日"+hour+"："+Minute+"："+seconds+dayx;
+	}
+	
+	setInterval(function(){
+		document.getElementById("demo").innerHTML = mytime()},100);
+	
+	
+	
+	
+</script>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<p id="p">祝您快乐每一天呀！<br />
+保持好心情，快乐每一天！</p>
+<p></p>
+</body>
+</html>
