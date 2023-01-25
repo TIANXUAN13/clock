@@ -39,7 +39,7 @@
 	function mytime(){
 		var d=new Date();
 		var years=d.getFullYear();
-		var month=d.getMonth();
+		var month=d.getMonth()+1;
 		var date=d.getDate()
 		var hour=d.getHours();
 		var Minute=d.getMinutes();
@@ -75,7 +75,7 @@
 		{
 			dayx="星期天"
 		}
-		return years+"年"+month+"月"+date+"日"+hour+"："+Minute+"："+seconds+dayx;
+		return "现在是："+years+"年"+month+"月"+date+"日"+hour+"："+Minute+"："+seconds+dayx;
 	}
 	
 	setInterval(function(){
