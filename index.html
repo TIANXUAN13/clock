@@ -380,6 +380,111 @@
 
         .reset-btn { width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: #fff; font-size: 14px; font-weight: 500; cursor: pointer; transition: all var(--transition-speed) ease; margin-top: 20px; }
         .reset-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
+        .reset-btn:active { transform: scale(0.98); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 300;
+            opacity: 0; visibility: hidden;
+            transition: all var(--transition-speed) ease;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        
+        .modal-panel {
+            background: rgba(20,20,20,0.95); backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px; max-width: 400px; width: 90%;
+            transform: scale(0.9) translateY(20px);
+            transition: all var(--transition-speed) ease;
+        }
+        
+        .modal-overlay.active .modal-panel {
+            transform: scale(1) translateY(0);
+        }
+        
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .modal-title { font-size: 18px; font-weight: 600; color: #fff; }
+        .modal-close {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition-speed) ease;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.2); transform: rotate(90deg); }
+        .modal-close svg { width: 16px; height: 16px; fill: #fff; }
+        
+        .modal-body { margin-bottom: 20px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 8px; color: rgba(255,255,255,0.8); font-size: 14px; }
+        .form-input {
+            width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
+            color: #fff; font-size: 14px; outline: none; transition: all var(--transition-speed) ease;
+        }
+        .form-input::placeholder { color: rgba(255,255,255,0.4); }
+        .form-input:focus { background: rgba(255,255,255,0.15); border-color: var(--primary-color); }
+        
+        .form-select {
+            width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
+            color: #fff; font-size: 14px; outline: none; cursor: pointer;
+            appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23fff'%3E%3Cpath d='M6 9L1 4h10L6 9z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 16px center;
+        }
+        .form-select:focus { background-color: rgba(255,255,255,0.15); border-color: var(--primary-color); }
+        .form-select option { background: #141414; color: #fff; }
+        
+        .date-picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        
+        .modal-footer { display: flex; gap: 10px; }
+        .modal-btn {
+            flex: 1; padding: 12px 20px; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: all var(--transition-speed) ease;
+        }
+        .modal-btn-primary { background: var(--primary-color); color: #fff; }
+        .modal-btn-primary:hover { filter: brightness(1.2); }
+        .modal-btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+        .modal-btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        
+        .timezone-list { max-height: 300px; overflow-y: auto; }
+        .timezone-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; background: rgba(255,255,255,0.05);
+            border-radius: 10px; margin-bottom: 8px; transition: all var(--transition-speed) ease;
+        }
+        .timezone-item:hover { background: rgba(255,255,255,0.1); }
+        .timezone-info { flex: 1; }
+        .timezone-name { font-size: 14px; font-weight: 500; color: #fff; }
+        .timezone-time { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+        .timezone-actions { display: flex; gap: 8px; }
+        .timezone-btn {
+            width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.1);
+            border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: rgba(255,255,255,0.8); transition: all var(--transition-speed) ease;
+        }
+        .timezone-btn:hover { background: rgba(255,255,255,0.2); }
+        .timezone-btn.delete:hover { background: rgba(255,59,48,0.3); color: #fff; }
+        
+        .refresh-btn {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition-speed) ease; opacity: 0;
+        }
+        .widget:hover .refresh-btn { opacity: 1; }
+        .refresh-btn:hover { background: var(--primary-color); transform: rotate(180deg); }
+        .refresh-btn svg { width: 16px; height: 16px; fill: rgba(255,255,255,0.8); }
 
         .location-input-wrapper { display: flex; gap: 8px; margin-top: 15px; }
         .location-input { flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; font-size: 14px; outline: none; }
@@ -457,6 +562,95 @@
     <button class="fullscreen-btn" id="fullscreen-btn"><svg viewBox="0 0 24 24" id="fullscreen-icon"><path d="M5 5h5v2H7v3H5V5zm9 0h5v5h-2V7h-3V5zm0 9h5v5h-2v-3h-3v-2zm-9 0h2v3h3v2H5v-5z"/></svg></button>
 
     <div class="settings-overlay" id="settings-overlay"></div>
+    
+    <!-- 日历跳转弹窗 -->
+    <div class="modal-overlay" id="calendar-jump-modal">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3 class="modal-title">跳转到指定日期</h3>
+                <button class="modal-close" id="calendar-jump-close">
+                    <svg viewBox="0 0 24 24"><path d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59 7.11 5.7a.996.996 0 1 0-1.41 1.41L10.59 12 5.7 16.89a.996.996 0 1 0 1.41 1.41L12 13.41l4.89 4.89a.996.996 0 1 0 1.41-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4z"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="date-picker-grid">
+                    <div class="form-group">
+                        <label class="form-label">年份</label>
+                        <input type="number" class="form-input" id="jump-year" min="1900" max="2100">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">月份</label>
+                        <input type="number" class="form-input" id="jump-month" min="1" max="12">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">日期</label>
+                        <input type="number" class="form-input" id="jump-day" min="1" max="31">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" id="calendar-jump-cancel">取消</button>
+                <button class="modal-btn modal-btn-primary" id="calendar-jump-confirm">跳转</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 天气位置编辑弹窗 -->
+    <div class="modal-overlay" id="weather-location-modal">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3 class="modal-title">修改天气位置</h3>
+                <button class="modal-close" id="weather-location-close">
+                    <svg viewBox="0 0 24 24"><path d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59 7.11 5.7a.996.996 0 1 0-1.41 1.41L10.59 12 5.7 16.89a.996.996 0 1 0 1.41 1.41L12 13.41l4.89 4.89a.996.996 0 1 0 1.41-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4z"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">省份</label>
+                    <input type="text" class="form-input" id="weather-province" placeholder="如：北京">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">城市</label>
+                    <input type="text" class="form-input" id="weather-city" placeholder="如：朝阳区">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">区县（可选）</label>
+                    <input type="text" class="form-input" id="weather-district" placeholder="如：三里屯">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" id="weather-location-cancel">取消</button>
+                <button class="modal-btn modal-btn-primary" id="weather-location-confirm">确定</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 世界时钟编辑弹窗 -->
+    <div class="modal-overlay" id="worldclock-modal">
+        <div class="modal-panel" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">管理世界时钟</h3>
+                <button class="modal-close" id="worldclock-close">
+                    <svg viewBox="0 0 24 24"><path d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59 7.11 5.7a.996.996 0 1 0-1.41 1.41L10.59 12 5.7 16.89a.996.996 0 1 0 1.41 1.41L12 13.41l4.89 4.89a.996.996 0 1 0 1.41-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4z"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">添加新时区</label>
+                    <select class="form-select" id="timezone-select"></select>
+                </div>
+                <button class="modal-btn modal-btn-primary" id="add-timezone-btn" style="width: 100%;">添加时区</button>
+                
+                <div style="margin-top: 20px;">
+                    <label class="form-label">已添加的时区</label>
+                    <div class="timezone-list" id="timezone-list"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-primary" id="worldclock-confirm">完成</button>
+            </div>
+        </div>
+    </div>
 
     <div class="settings-panel" id="settings-panel">
         <div class="settings-header">
@@ -478,8 +672,21 @@
         <div class="settings-section" id="weather-settings" style="display:none;">
             <h3 class="section-title">天气位置</h3>
             <div class="location-input-wrapper">
-                <input type="text" class="location-input" id="location-input" placeholder="输入城市名称（如：北京）">
+                <input type="text" class="location-input" id="location-input" placeholder="输入城市名称（如：北京、上海市）">
                 <button class="location-btn" id="location-btn">更新</button>
+            </div>
+            
+            <div class="toggle-wrapper" style="margin-top: 15px;">
+                <span class="toggle-label">扩展气象信息</span>
+                <div class="toggle" id="weather-extended-toggle"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="toggle-wrapper">
+                <span class="toggle-label">生活指数</span>
+                <div class="toggle" id="weather-indices-toggle"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="toggle-wrapper">
+                <span class="toggle-label">天气预报</span>
+                <div class="toggle" id="weather-forecast-toggle"><div class="toggle-knob"></div></div>
             </div>
         </div>
 
@@ -540,12 +747,21 @@
         </div>
 
         <button class="reset-btn" id="reset-btn">恢复默认设置</button>
+        
+        <div class="settings-section">
+            <h3 class="section-title">数据管理</h3>
+            <div style="display: flex; gap: 10px;">
+                <button class="reset-btn" id="export-btn" style="margin-top: 0;">导出配置</button>
+                <button class="reset-btn" id="import-btn" style="margin-top: 0;">导入配置</button>
+            </div>
+            <input type="file" id="import-file-input" accept=".json" style="display: none;">
+        </div>
     </div>
 
     <script>
         const DB_NAME = 'LiquidGlassClockDB', DB_VERSION = 1;
         const STORE_IMAGES = 'backgroundImages', STORE_SETTINGS = 'settings', STORE_WIDGETS = 'widgets', STORE_TODOS = 'todos';
-        let db = null, settings = {primaryColor:'#007AFF',fontFamily:'Inter',fontType:'sans',fontSize:120,fontWeight:300,timeFormat:24,showDate:true,showSeconds:true,currentBackground:null,weatherLocation:'北京'}, activeWidgets = [], todos = [];
+        let db = null, settings = {primaryColor:'#007AFF',fontFamily:'Inter',fontType:'sans',fontSize:120,fontWeight:300,timeFormat:24,showDate:true,showSeconds:true,currentBackground:null,weatherLocation:'北京',worldClockTimezones:null}, activeWidgets = [], todos = [];
 
         async function initDB(){return new Promise((r,e)=>{const i=indexedDB.open(DB_NAME,DB_VERSION);i.onerror=()=>e(i.error);i.onsuccess=()=>{db=i.result;r(db)};i.onupgradeneeded=(e)=>{const s=e.target.result;!s.objectStoreNames.contains(STORE_IMAGES)&&s.createObjectStore(STORE_IMAGES,{keyPath:'id'});!s.objectStoreNames.contains(STORE_SETTINGS)&&s.createObjectStore(STORE_SETTINGS,{keyPath:'key'});!s.objectStoreNames.contains(STORE_WIDGETS)&&s.createObjectStore(STORE_WIDGETS,{keyPath:'id'});!s.objectStoreNames.contains(STORE_TODOS)&&s.createObjectStore(STORE_TODOS,{keyPath:'id',autoIncrement:true});};});}
         function dbPut(s,e){return new Promise((r,t)=>{const a=db.transaction(s,'readwrite'),o=a.objectStore(s),n=o.put(e);n.onsuccess=()=>r(n.result);n.onerror=()=>t(n.error);});}
@@ -556,17 +772,233 @@
 
         function hexToRgb(hex){const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);return r?{r:parseInt(r[1],16),g:parseInt(r[2],16),b:parseInt(r[3],16)}:{r:0,g:0,b:0};}
 
-        const defaultSettings = {...settings};
+        function setupNewFeatures(){
+            setupImportExport();
+            setupCalendarJump();
+            setupWeatherLocation();
+            setupWorldClock();
+        }
 
-        const widgetTemplates = {
-            weather:{title:'天气',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 0-9 9c0 4.97 4.03 9 9 9a9 9 0 0 0 9-9 9 9 0 0 0-9-9z"/></svg>',content:`<div class="weather-main"><div class="weather-temp">--°</div><div class="weather-icon">☁️</div></div><div class="weather-desc">加载中...</div><div class="weather-location"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>${settings.weatherLocation}</div><div class="weather-details"><div class="weather-detail weather-humidity"><svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/></svg>--%</div><div class="weather-detail weather-wind"><svg viewBox="0 0 24 24"><path d="M12.5 4.5a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-8v2h8a4 4 0 0 0 0-8h-8v2h8z"/></svg>-- km/h</div><div class="weather-detail weather-high"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>H: --°</div><div class="weather-detail weather-low"><svg viewBox="0 0 24 24"><path d="M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z"/></svg>L: --°</div></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);updateWeatherWidget(widget);}},
-            todo:{title:'待办事项',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>',content:`<div class="todo-input-wrapper"><input type="text" class="todo-input" placeholder="添加新任务..."><button class="todo-add-btn">添加</button></div><div class="todo-list"></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);const input=widget.querySelector('.todo-input');const addBtn=widget.querySelector('.todo-add-btn');const list=widget.querySelector('.todo-list');let localTodos=[];function render(){list.innerHTML=localTodos.map(t=>`<div class="todo-item" data-todo-id="${t.id}"><div class="todo-checkbox ${t.completed?'checked':''}"></div><div class="todo-text ${t.completed?'completed':''}">${t.text}</div><div class="todo-delete">×</div></div>`).join('');list.querySelectorAll('.todo-checkbox').forEach((btn,idx)=>{btn.addEventListener('click',()=>{localTodos[idx].completed=!localTodos[idx].completed;render();});});list.querySelectorAll('.todo-delete').forEach((btn,idx)=>{btn.addEventListener('click',()=>{localTodos.splice(idx,1);render();});});}function addTodo(){const text=input.value.trim();if(text){localTodos.push({id:Date.now(),text:text,completed:false});input.value='';render();}}addBtn.addEventListener('click',addTodo);input.addEventListener('keypress',e=>{if(e.key==='Enter')addTodo();});render();}},
-            system:{title:'系统信息',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2H0c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2h-4z"/></svg>',content:`<div class="system-info-grid"><div class="system-info-item"><div class="system-info-label">CPU 核心</div><div class="system-info-value sys-cpu">--</div></div><div class="system-info-item"><div class="system-info-label">内存</div><div class="system-info-value sys-memory">--</div></div><div class="system-info-item"><div class="system-info-label">屏幕</div><div class="system-info-value sys-screen">--</div></div><div class="system-info-item"><div class="system-info-label">电池</div><div class="system-info-value sys-battery">--</div><div class="battery-level"><div class="battery-fill sys-battery-fill" style="width:0%"></div></div></div></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);widget.querySelector('.sys-cpu').textContent=navigator.hardwareConcurrency||'--';const memEl=widget.querySelector('.sys-memory');if(navigator.deviceMemory){memEl.textContent=navigator.deviceMemory+' GB';}else if(window.performance&&window.performance.memory){const used=Math.round(window.performance.memory.usedJSHeapSize/(1024*1024*1024)*100)/100;const total=Math.round(window.performance.memory.totalJSHeapSize/(1024*1024*1024)*100)/100;if(total>0){memEl.textContent=used+'/'+total+' GB';}else{memEl.textContent='JS: '+used+' GB';}}else{memEl.textContent='未知';}widget.querySelector('.sys-screen').textContent=`${window.screen.width}×${window.screen.height}`;if('getBattery'in navigator){navigator.getBattery().then(battery=>{function updateBattery(){const level=Math.round(battery.level*100);widget.querySelector('.sys-battery').textContent=level+'%';widget.querySelector('.sys-battery-fill').style.width=level+'%';}updateBattery();battery.addEventListener('levelchange',updateBattery);});}}},
-            worldclock:{title:'世界时钟',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2z"/></svg>',content:`<div class="world-clock-grid"><div class="world-clock-item"><div class="world-clock-city">纽约</div><div class="world-clock-time" data-tz="America/New_York">--:--</div><div class="world-clock-date" data-tz="America/New_York">--</div></div><div class="world-clock-item"><div class="world-clock-city">伦敦</div><div class="world-clock-time" data-tz="Europe/London">--:--</div><div class="world-clock-date" data-tz="Europe/London">--</div></div><div class="world-clock-item"><div class="world-clock-city">东京</div><div class="world-clock-time" data-tz="Asia/Tokyo">--:--</div><div class="world-clock-date" data-tz="Asia/Tokyo">--</div></div><div class="world-clock-item"><div class="world-clock-city">悉尼</div><div class="world-clock-time" data-tz="Australia/Sydney">--:--</div><div class="world-clock-date" data-tz="Australia/Sydney">--</div></div></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);updateWorldClocks(widget);}},
-            calendar:{title:'日历',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>',content:`<div class="calendar-header"><div class="calendar-month-year">2024年1月</div><div class="calendar-nav"><button class="calendar-nav-btn cal-prev">‹</button><button class="calendar-nav-btn cal-next">›</button></div></div><div class="calendar-grid cal-grid"></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);let currentDate=new Date();function renderCalendar(){const year=currentDate.getFullYear(),month=currentDate.getMonth();widget.querySelector('.calendar-month-year').textContent=`${year}年${month+1}月`;const firstDay=new Date(year,month,1).getDay(),daysInMonth=new Date(year,month+1,0).getDate(),daysInPrevMonth=new Date(year,month,0).getDate();let html=['日','一','二','三','四','五','六'].map(d=>`<div class="calendar-day-header">${d}</div>`).join('');for(let i=firstDay-1;i>=0;i--)html+=`<div class="calendar-day other-month">${daysInPrevMonth-i}</div>`;const today=new Date();for(let i=1;i<=daysInMonth;i++){const isToday=today.getDate()===i&&today.getMonth()===month&&today.getFullYear()===year;html+=`<div class="calendar-day ${isToday?'today':''}">${i}</div>`;}for(let i=1;i<=42-(firstDay+daysInMonth);i++)html+=`<div class="calendar-day other-month">${i}</div>`;widget.querySelector('.cal-grid').innerHTML=html;}widget.querySelector('.cal-prev').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();});widget.querySelector('.cal-next').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();});renderCalendar();}}
+        function setupImportExport(){
+            document.getElementById('export-btn').addEventListener('click',async()=>{
+                try{
+                    const data={
+                        version:'1.0',
+                        exportTime:new Date().toISOString(),
+                        settings:await dbGet(STORE_SETTINGS,'settings'),
+                        widgets:await dbGetAll(STORE_WIDGETS),
+                        images:await dbGetAll(STORE_IMAGES),
+                        todos:await dbGetAll(STORE_TODOS)
+                    };
+                    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+                    const url=URL.createObjectURL(blob);
+                    const a=document.createElement('a');
+                    a.href=url;
+                    a.download=`clock-backup-${new Date().toISOString().slice(0,10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    alert('✅ 配置导出成功！');
+                }catch(err){
+                    console.error('导出失败:',err);
+                    alert('❌ 导出失败：'+err.message);
+                }
+            });
+            document.getElementById('import-btn').addEventListener('click',()=>{document.getElementById('import-file-input').click();});
+            document.getElementById('import-file-input').addEventListener('change',async(e)=>{
+                const file=e.target.files[0];
+                if(!file)return;
+                try{
+                    const text=await file.text();
+                    const data=JSON.parse(text);
+                    if(data.settings){await dbPut(STORE_SETTINGS,data.settings);}
+                    if(data.widgets){await dbClear(STORE_WIDGETS);for(const w of data.widgets){await dbPut(STORE_WIDGETS,w);}}
+                    if(data.images){await dbClear(STORE_IMAGES);for(const img of data.images){await dbPut(STORE_IMAGES,img);}}
+                    if(data.todos){await dbClear(STORE_TODOS);for(const t of data.todos){await dbPut(STORE_TODOS,t);}}
+                    alert('✅ 配置导入成功！页面将重新加载。');
+                    setTimeout(()=>location.reload(),1000);
+                }catch(err){
+                    console.error('导入失败:',err);
+                    alert('❌ 导入失败：'+err.message);
+                }
+                e.target.value='';
+            });
+        }
+
+        function setupCalendarJump(){
+            const modal=document.getElementById('calendar-jump-modal');
+            document.getElementById('calendar-jump-close').onclick=()=>modal.classList.remove('active');
+            document.getElementById('calendar-jump-cancel').onclick=()=>modal.classList.remove('active');
+            document.getElementById('calendar-jump-confirm').onclick=()=>{
+                const year=parseInt(document.getElementById('jump-year').value);
+                const month=parseInt(document.getElementById('jump-month').value)-1;
+                const day=parseInt(document.getElementById('jump-day').value);
+                if(!year||month<0||month>11||!day||day<1||day>31){
+                    alert('请输入有效的日期！');
+                    return;
+                }
+                const calendarWidget=document.querySelector('[data-widget-type="calendar"]');
+                if(calendarWidget){
+                    const currentDate=new Date(year,month,day);
+                    const monthYearEl=calendarWidget.querySelector('.calendar-month-year');
+                    monthYearEl.textContent=`${year}年${month+1}月`;
+                    const firstDay=new Date(year,month,1).getDay();
+                    const daysInMonth=new Date(year,month+1,0).getDate();
+                    const daysInPrevMonth=new Date(year,month,0).getDate();
+                    let html=['日','一','二','三','四','五','六'].map(d=>`<div class="calendar-day-header">${d}</div>`).join('');
+                    for(let i=firstDay-1;i>=0;i--)html+=`<div class="calendar-day other-month">${daysInPrevMonth-i}</div>`;
+                    const today=new Date();
+                    for(let i=1;i<=daysInMonth;i++){
+                        const isToday=today.getDate()===i&&today.getMonth()===month&&today.getFullYear()===year;
+                        html+=`<div class="calendar-day ${isToday?'today':''}" style="cursor:pointer;">${i}</div>`;
+                    }
+                    for(let i=1;i<=42-(firstDay+daysInMonth);i++)html+=`<div class="calendar-day other-month">${i}</div>`;
+                    calendarWidget.querySelector('.cal-grid').innerHTML=html;
+                    modal.classList.remove('active');
+                }
+            };
+        }
+
+        function setupWeatherLocation(){
+            const modal=document.getElementById('weather-location-modal');
+            document.getElementById('weather-location-close').onclick=()=>modal.classList.remove('active');
+            document.getElementById('weather-location-cancel').onclick=()=>modal.classList.remove('active');
+            document.getElementById('weather-location-confirm').onclick=async()=>{
+                const province=document.getElementById('weather-province').value.trim();
+                const city=document.getElementById('weather-city').value.trim();
+                const district=document.getElementById('weather-district').value.trim();
+                if(!province){alert('请输入省份！');return;}
+                const location=[province,city,district].filter(p=>p).join(',');
+                settings.weatherLocation=location;
+                await dbPut(STORE_SETTINGS,{key:'settings',value:settings});
+                document.getElementById('location-input').value=location;
+                document.querySelectorAll('[data-widget-type="weather"] .weather-location-text').forEach(el=>el.textContent=location);
+                document.querySelectorAll('[data-widget-type="weather"]').forEach(w=>updateWeatherWidget(w));
+                modal.classList.remove('active');
+            };
+        }
+
+        function setupWorldClock(){
+            const modal=document.getElementById('worldclock-modal');
+            document.getElementById('worldclock-close').onclick=()=>modal.classList.remove('active');
+            document.getElementById('worldclock-confirm').onclick=()=>modal.classList.remove('active');
+            document.getElementById('add-timezone-btn').onclick=()=>{
+                const select=document.getElementById('timezone-select');
+                const timezone=select.value;
+                if(!timezone){alert('请选择时区！');return;}
+                if(!settings.worldClockTimezones){settings.worldClockTimezones=[];}
+                if(settings.worldClockTimezones.includes(timezone)){alert('该时区已添加！');return;}
+                settings.worldClockTimezones.push(timezone);
+                dbPut(STORE_SETTINGS,{key:'settings',value:settings});
+                const list=document.getElementById('timezone-list');
+                const city=timezone.split('/')[timezone.split('/').length-1].replace(/_/g,' ');
+                const item=document.createElement('div');
+                item.className='timezone-item';
+                item.innerHTML=`<div class="timezone-info"><div class="timezone-name">${city}</div><div class="timezone-time">${timezone}</div></div><div class="timezone-actions"><button class="timezone-btn delete" data-tz="${timezone}">×</button></div>`;
+                list.appendChild(item);
+                item.querySelector('.timezone-btn.delete').onclick=()=>{settings.worldClockTimezones=settings.worldClockTimezones.filter(t=>t!==timezone);dbPut(STORE_SETTINGS,{key:'settings',value:settings});item.remove();document.querySelectorAll('[data-widget-type="worldclock"]').forEach(w=>{const initFn=widgetTemplates.worldclock.init;const widgetId=w.dataset.widgetId;initFn(widgetId);});};
+                document.querySelectorAll('[data-widget-type="worldclock"]').forEach(w=>{const initFn=widgetTemplates.worldclock.init;const widgetId=w.dataset.widgetId;initFn(widgetId);});
+            };
+        }
+
+        const defaultSettings = {
+            ...settings,
+            weatherExtended: false,
+            weatherIndices: false,
+            weatherForecast: false
         };
 
-        async function updateWeatherWidget(targetWidget){try{const e=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(settings.weatherLocation)}&count=1&language=zh&format=json`);const t=await e.json();if(!t.results||t.results.length===0)return;const{latitude:a,longitude:o,name:l,country:r}=t.results[0];const i=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${a}&longitude=${o}&current_weather=true&hourly=relativehumidity_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min&timezone=auto`);const c=await i.json(),s={location:`${l},${r}`,temperature:Math.round(c.current_weather.temperature),weatherCode:c.current_weather.weathercode,windSpeed:c.current_weather.windspeed,humidity:c.hourly.relativehumidity_2m[new Date().getHours()],precipitation:c.hourly.precipitation_probability[new Date().getHours()],maxTemp:Math.round(c.daily.temperature_2m_max[0]),minTemp:Math.round(c.daily.temperature_2m_min[0])};const u={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌦️',81:'🌧️',82:'🌧️',95:'⛈️',96:'⛈️',99:'⛈️'};const d={0:'晴朗',1:'多云',2:'多云',3:'阴天',45:'雾',48:'雾',51:'小雨',53:'中雨',55:'大雨',61:'小雨',63:'中雨',65:'大雨',71:'小雪',73:'中雪',75:'大雪',80:'阵雨',81:'大雨',82:'暴雨',95:'雷雨',96:'雷雹',99:'强雷雹'};const m=targetWidget||document.querySelector('[data-widget-type="weather"]');if(m){m.querySelector('.weather-temp').textContent=`${s.temperature}°`;m.querySelector('.weather-icon').textContent=u[s.weatherCode]||'☁️';m.querySelector('.weather-desc').textContent=d[s.weatherCode]||'多云';m.querySelector('.weather-location').innerHTML=`<svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>${s.location}`;m.querySelector('.weather-humidity').textContent=`${s.humidity}%`;m.querySelector('.weather-wind').textContent=`${s.windSpeed} km/h`;m.querySelector('.weather-high').textContent=`H: ${s.maxTemp}°`;m.querySelector('.weather-low').textContent=`L: ${s.minTemp}°`;}}catch(e){console.error('Weather error:',e);}}
+        const widgetTemplates = {
+            weather:{title:'天气',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 0-9 9c0 4.97 4.03 9 9 9a9 9 0 0 0 9-9 9 9 0 0 0-9-9z"/></svg>',content:`<div class="weather-main"><div class="weather-temp">--°</div><div class="weather-icon">☁️</div></div><div class="weather-desc">加载中...</div><div class="weather-location"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg><span class="weather-location-text">${settings.weatherLocation}</span></div><div class="weather-details weather-basic"><div class="weather-detail weather-humidity"><svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/></svg><span class="weather-humidity-value">--%</span></div><div class="weather-detail weather-wind"><svg viewBox="0 0 24 24"><path d="M12.5 4.5a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-8v2h8a4 4 0 0 0 0-8h-8v2h8z"/></svg><span class="weather-wind-value">--</span></div><div class="weather-detail weather-high"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>H: --°</div><div class="weather-detail weather-low"><svg viewBox="0 0 24 24"><path d="M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z"/></svg>L: --°</div></div><div class="weather-extended-details" style="display:none;"><div class="weather-detail"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg><span class="weather-feels-like">体感: --°</span></div><div class="weather-detail"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg><span class="weather-visibility">能见度: --</span></div><div class="weather-detail"><svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/></svg><span class="weather-aqi">AQI: --</span></div><div class="weather-detail"><svg viewBox="0 0 24 24"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.79 1.41-1.41-1.79-1.79-1.41 1.41zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg><span class="weather-uv">紫外线: --</span></div></div><div class="weather-forecast" style="display:none;"></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);const refreshBtn=document.createElement('button');refreshBtn.className='refresh-btn';refreshBtn.innerHTML='<svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';refreshBtn.onclick=()=>updateWeatherWidget(widget);widget.querySelector('.widget-header').appendChild(refreshBtn);const locationText=widget.querySelector('.weather-location-text');locationText.style.cursor='pointer';locationText.onclick=()=>{const modal=document.getElementById('weather-location-modal');const location=settings.weatherLocation||'北京';const parts=location.split(',');if(parts.length>=2){document.getElementById('weather-province').value=parts[0];document.getElementById('weather-city').value=parts[1];document.getElementById('weather-district').value=parts[2]||'';}else{document.getElementById('weather-province').value=location;document.getElementById('weather-city').value='';document.getElementById('weather-district').value='';}modal.classList.add('active');};updateWeatherWidget(widget);}},
+            todo:{title:'待办事项',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>',content:`<div class="todo-input-wrapper"><input type="text" class="todo-input" placeholder="添加新任务..."><button class="todo-add-btn">添加</button></div><div class="todo-list"></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);const input=widget.querySelector('.todo-input');const addBtn=widget.querySelector('.todo-add-btn');const list=widget.querySelector('.todo-list');let localTodos=[];function render(){list.innerHTML=localTodos.map(t=>`<div class="todo-item" data-todo-id="${t.id}"><div class="todo-checkbox ${t.completed?'checked':''}"></div><div class="todo-text ${t.completed?'completed':''}">${t.text}</div><div class="todo-delete">×</div></div>`).join('');list.querySelectorAll('.todo-checkbox').forEach((btn,idx)=>{btn.addEventListener('click',()=>{localTodos[idx].completed=!localTodos[idx].completed;render();});});list.querySelectorAll('.todo-delete').forEach((btn,idx)=>{btn.addEventListener('click',()=>{localTodos.splice(idx,1);render();});});}function addTodo(){const text=input.value.trim();if(text){localTodos.push({id:Date.now(),text:text,completed:false});input.value='';render();}}addBtn.addEventListener('click',addTodo);input.addEventListener('keypress',e=>{if(e.key==='Enter')addTodo();});render();}},
+            system:{title:'系统信息',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2H0c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2h-4z"/></svg>',content:`<div class="system-info-grid"><div class="system-info-item"><div class="system-info-label">CPU 核心</div><div class="system-info-value sys-cpu">--</div></div><div class="system-info-item"><div class="system-info-label">内存</div><div class="system-info-value sys-memory">--</div></div><div class="system-info-item"><div class="system-info-label">屏幕</div><div class="system-info-value sys-screen">--</div></div><div class="system-info-item"><div class="system-info-label">电池</div><div class="system-info-value sys-battery">--</div><div class="battery-level"><div class="battery-fill sys-battery-fill" style="width:0%"></div></div></div></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);widget.querySelector('.sys-cpu').textContent=navigator.hardwareConcurrency||'--';const memEl=widget.querySelector('.sys-memory');if(navigator.deviceMemory){memEl.textContent=navigator.deviceMemory+' GB';}else if(window.performance&&window.performance.memory){const used=Math.round(window.performance.memory.usedJSHeapSize/(1024*1024*1024)*100)/100;const total=Math.round(window.performance.memory.totalJSHeapSize/(1024*1024*1024)*100)/100;if(total>0){memEl.textContent=used+'/'+total+' GB';}else{memEl.textContent='JS: '+used+' GB';}}else{memEl.textContent='未知';}widget.querySelector('.sys-screen').textContent=`${window.screen.width}×${window.screen.height}`;if('getBattery'in navigator){navigator.getBattery().then(battery=>{function updateBattery(){const level=Math.round(battery.level*100);widget.querySelector('.sys-battery').textContent=level+'%';widget.querySelector('.sys-battery-fill').style.width=level+'%';}updateBattery();battery.addEventListener('levelchange',updateBattery);});}}},
+            worldclock:{title:'世界时钟',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2z"/></svg>',content:`<div class="world-clock-grid"></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);let timezones=settings.worldClockTimezones||['America/New_York','Europe/London','Asia/Tokyo','Australia/Sydney'];function renderClocks(){const grid=widget.querySelector('.world-clock-grid');grid.innerHTML='';timezones.forEach(tz=>{const city=tz.split('/')[tz.split('/').length-1].replace(/_/g,' ');const item=document.createElement('div');item.className='world-clock-item';item.innerHTML=`<div class="world-clock-city">${city}</div><div class="world-clock-time" data-tz="${tz}">--:--</div><div class="world-clock-date" data-tz="${tz}">--</div>`;grid.appendChild(item);});updateWorldClocks(widget);}renderClocks();const editBtn=document.createElement('button');editBtn.className='refresh-btn';editBtn.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';editBtn.onclick=()=>{const modal=document.getElementById('worldclock-modal');const select=document.getElementById('timezone-select');const list=document.getElementById('timezone-list');select.innerHTML='';const commonTimezones=[{value:'America/New_York',label:'纽约 (纽约州)'},{value:'America/Los_Angeles',label:'洛杉矶 (加利福尼亚州)'},{value:'America/Chicago',label:'芝加哥 (伊利诺伊州)'},{value:'Europe/London',label:'伦敦 (英国)'},{value:'Europe/Paris',label:'巴黎 (法国)'},{value:'Europe/Berlin',label:'柏林 (德国)'},{value:'Europe/Moscow',label:'莫斯科 (俄罗斯)'},{value:'Asia/Tokyo',label:'东京 (日本)'},{value:'Asia/Shanghai',label:'上海 (中国)'},{value:'Asia/Hong_Kong',label:'香港 (中国)'},{value:'Asia/Singapore',label:'新加坡 (新加坡)'},{value:'Asia/Seoul',label:'首尔 (韩国)'},{value:'Asia/Dubai',label:'迪拜 (阿联酋)'},{value:'Australia/Sydney',label:'悉尼 (澳大利亚)'},{value:'Pacific/Auckland',label:'奥克兰 (新西兰)'},{value:'UTC',label:'协调世界时 (UTC)'}];commonTimezones.forEach(tz=>{const option=document.createElement('option');option.value=tz.value;option.label=tz.label;select.appendChild(option);});list.innerHTML='';timezones.forEach(tz=>{const city=tz.split('/')[tz.split('/').length-1].replace(/_/g,' ');const item=document.createElement('div');item.className='timezone-item';item.innerHTML=`<div class="timezone-info"><div class="timezone-name">${city}</div><div class="timezone-time">${tz}</div></div><div class="timezone-actions"><button class="timezone-btn delete" data-tz="${tz}">×</button></div>`;list.appendChild(item);});list.querySelectorAll('.timezone-btn.delete').forEach(btn=>{btn.onclick=()=>{const tzToRemove=btn.dataset.tz;timezones=timezones.filter(t=>t!==tzToRemove);settings.worldClockTimezones=timezones;renderClocks();btn.parentElement.parentElement.remove();};});modal.classList.add('active');};widget.querySelector('.widget-header').appendChild(editBtn);updateWorldClocks(widget);}},
+            calendar:{title:'日历',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>',content:`<div class="calendar-header"><div class="calendar-month-year">2024年1月</div><div class="calendar-nav"><button class="calendar-nav-btn cal-prev">‹</button><button class="calendar-nav-btn cal-next">›</button></div></div><div class="calendar-grid cal-grid"></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);let currentDate=new Date();function renderCalendar(){const year=currentDate.getFullYear(),month=currentDate.getMonth();const monthYearEl=widget.querySelector('.calendar-month-year');monthYearEl.textContent=`${year}年${month+1}月`;monthYearEl.style.cursor='pointer';monthYearEl.onclick=()=>{const modal=document.getElementById('calendar-jump-modal');document.getElementById('jump-year').value=year;document.getElementById('jump-month').value=month+1;document.getElementById('jump-day').value=new Date().getDate();modal.classList.add('active');};const firstDay=new Date(year,month,1).getDay(),daysInMonth=new Date(year,month+1,0).getDate(),daysInPrevMonth=new Date(year,month,0).getDate();let html=['日','一','二','三','四','五','六'].map(d=>`<div class="calendar-day-header">${d}</div>`).join('');for(let i=firstDay-1;i>=0;i--)html+=`<div class="calendar-day other-month">${daysInPrevMonth-i}</div>`;const today=new Date();for(let i=1;i<=daysInMonth;i++){const isToday=today.getDate()===i&&today.getMonth()===month&&today.getFullYear()===year;html+=`<div class="calendar-day ${isToday?'today':''}" style="cursor:pointer;">${i}</div>`;}for(let i=1;i<=42-(firstDay+daysInMonth);i++)html+=`<div class="calendar-day other-month">${i}</div>`;widget.querySelector('.cal-grid').innerHTML=html;}widget.querySelector('.cal-prev').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();});widget.querySelector('.cal-next').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();});renderCalendar();}}
+        };
+
+        async function updateWeatherWidget(targetWidget) {
+            try {
+                const widgets = targetWidget ? [targetWidget] : document.querySelectorAll('[data-widget-type="weather"]');
+                const location = settings.weatherLocation || '北京';
+                
+                const extended = settings.weatherExtended || false;
+                const indices = settings.weatherIndices || false;
+                const forecast = settings.weatherForecast || false;
+                
+                const params = new URLSearchParams();
+                params.append('city', location);
+                if (extended) params.append('extended', 'true');
+                if (indices) params.append('indices', 'true');
+                if (forecast) params.append('forecast', 'true');
+                
+                const response = await fetch(`https://uapis.cn/api/v1/misc/weather?${params.toString()}`);
+                const data = await response.json();
+                
+                if (!data || data.code) {
+                    console.error('天气API错误:', data?.message || '未知错误');
+                    widgets.forEach(widget => {
+                        widget.querySelector('.weather-desc').textContent = '加载失败';
+                    });
+                    return;
+                }
+                
+                const weatherIconMap = {
+                    '晴': '☀️', '多云': '⛅', '阴': '☁️', '小雨': '🌦️', '中雨': '🌧️',
+                    '大雨': '🌧️', '暴雨': '⛈️', '雷雨': '⛈️', '小雪': '🌨️', '中雪': '❄️',
+                    '大雪': '❄️', '雾': '🌫️', '沙尘暴': '🌪️'
+                };
+                
+                widgets.forEach(widget => {
+                    widget.querySelector('.weather-temp').textContent = `${data.temperature}°`;
+                    widget.querySelector('.weather-icon').textContent = weatherIconMap[data.weather] || '🌤️';
+                    widget.querySelector('.weather-desc').textContent = data.weather;
+                    
+                    const locationText = widget.querySelector('.weather-location-text');
+                    if (locationText) {
+                        locationText.textContent = data.city || location;
+                    }
+                    
+                    widget.querySelector('.weather-humidity-value').textContent = `${data.humidity}%`;
+                    widget.querySelector('.weather-wind-value').textContent = `${data.wind_direction}${data.wind_power}`;
+                    widget.querySelector('.weather-high').textContent = `H: ${data.temp_max || '--'}°`;
+                    widget.querySelector('.weather-low').textContent = `L: ${data.temp_min || '--'}°`;
+                    
+                    const extendedDetails = widget.querySelector('.weather-extended-details');
+                    if (extended && data.feels_like !== undefined) {
+                        extendedDetails.style.display = 'block';
+                        widget.querySelector('.weather-feels-like').textContent = `体感: ${data.feels_like}°`;
+                        widget.querySelector('.weather-visibility').textContent = `能见度: ${data.visibility}km`;
+                        widget.querySelector('.weather-aqi').textContent = `AQI: ${data.aqi || '--'}`;
+                        widget.querySelector('.weather-uv').textContent = `紫外线: ${data.uv || '--'}`;
+                    } else {
+                        extendedDetails.style.display = 'none';
+                    }
+                    
+                    const forecastDiv = widget.querySelector('.weather-forecast');
+                    if (forecast && data.forecast && data.forecast.length > 0) {
+                        forecastDiv.style.display = 'block';
+                        forecastDiv.innerHTML = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1);font-size:12px;"><div style="font-weight:600;margin-bottom:8px;opacity:0.8;">未来预报</div>' +
+                            data.forecast.slice(0, 3).map(f => 
+                                `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;">
+                                    <span style="opacity:0.7;">${f.week}</span>
+                                    <span>${f.weather_day}</span>
+                                    <span>${f.temp_min}°/${f.temp_max}°</span>
+                                </div>`
+                            ).join('') + '</div>';
+                    } else {
+                        forecastDiv.style.display = 'none';
+                    }
+                });
+                
+            } catch (error) {
+                console.error('天气更新错误:', error);
+                const widgets = targetWidget ? [targetWidget] : document.querySelectorAll('[data-widget-type="weather"]');
+                widgets.forEach(widget => {
+                    widget.querySelector('.weather-desc').textContent = '加载失败';
+                });
+            }
+        }
         function updateWorldClocks(targetWidget){const widgets=targetWidget?[targetWidget]:document.querySelectorAll('[data-widget-type="worldclock"]');widgets.forEach(widget=>{widget.querySelectorAll('[data-tz]').forEach(e=>{const t=e.dataset.tz,a=new Date(),o={timeZone:t,hour:'2-digit',minute:'2-digit',hour12:false},l={timeZone:t,month:'short',day:'numeric'};if(e.classList.contains('world-clock-time'))e.textContent=a.toLocaleTimeString('zh-CN',o);else if(e.classList.contains('world-clock-date'))e.textContent=a.toLocaleDateString('zh-CN',l);});});}
         function createWidget(type, widgetId = null) {
             const id = widgetId || `widget-${Date.now()}-${Math.random().toString(36).substr(2,9)}`;
@@ -828,17 +1260,75 @@
 
         document.getElementById('reset-btn').addEventListener('click',()=>{settings={...defaultSettings};bgLayer.style.backgroundImage='';applySettings();dbPut(STORE_SETTINGS,{key:'settings',value:settings});});
 
-        document.getElementById('location-btn').addEventListener('click',()=>{const e=document.getElementById('location-input').value.trim();e&&(settings.weatherLocation=e,dbPut(STORE_SETTINGS,{key:'settings',value:settings}),updateWeatherWidget());});
+        document.getElementById('location-btn').addEventListener('click',async()=>{const e=document.getElementById('location-input').value.trim();if(e){settings.weatherLocation=e;await dbPut(STORE_SETTINGS,{key:'settings',value:settings});updateWeatherWidget();}});
+        
+        const weatherExtendedToggle = document.getElementById('weather-extended-toggle');
+        const weatherIndicesToggle = document.getElementById('weather-indices-toggle');
+        const weatherForecastToggle = document.getElementById('weather-forecast-toggle');
+        
+        function setupWeatherToggle(toggle, settingKey) {
+            if (!toggle) return;
+            toggle.addEventListener('click', async () => {
+                toggle.classList.toggle('active');
+                settings[settingKey] = toggle.classList.contains('active');
+                await dbPut(STORE_SETTINGS, { key: 'settings', value: settings });
+                updateWeatherWidget();
+            });
+        }
+        
+        setupWeatherToggle(weatherExtendedToggle, 'weatherExtended');
+        setupWeatherToggle(weatherIndicesToggle, 'weatherIndices');
+        setupWeatherToggle(weatherForecastToggle, 'weatherForecast');
 
         addWidgetBtn.addEventListener('click',openSettings);
-        document.querySelectorAll('.widget-option').forEach(e=>e.addEventListener('click',()=>{const type=e.dataset.widget;const id=createWidget(type);activeWidgets.push({id:id,type:type});console.log(`➕ [添加组件] 类型: ${type}, ID: ${id}`);saveWidgetsToDB().then(()=>{console.log('✅ [添加完成] 已保存到数据库');});settingsPanel.classList.remove('active');settingsOverlay.classList.remove('active');}));
+        document.querySelectorAll('.widget-option').forEach(e=>e.addEventListener('click',async()=>{
+            const type=e.dataset.widget;
+            const id=createWidget(type);
+            activeWidgets.push({id:id,type:type});
+            console.log(`➕ [添加组件] 类型: ${type}, ID: ${id}`);
+            await saveWidgetsToDB();
+            console.log('✅ [添加完成] 已保存到数据库');
+            
+            const weatherSettingsSection = document.getElementById('weather-settings');
+            if (type === 'weather' && weatherSettingsSection) {
+                weatherSettingsSection.style.display = 'block';
+            }
+            
+            settingsPanel.classList.remove('active');
+            settingsOverlay.classList.remove('active');
+        }));
 
         document.getElementById('fullscreen-btn').addEventListener('click',()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();});
         document.addEventListener('fullscreenchange',()=>{const e=document.getElementById('fullscreen-icon');e.innerHTML=document.fullscreenElement?'<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>':'<path d="M5 5h5v2H7v3H5V5zm9 0h5v5h-2V7h-3V5zm0 9h5v5h-2v-3h-3v-2zm-9 0h2v3h3v2H5v-5z"/>';});
 
         document.addEventListener('keydown',e=>{if('Escape'===e.key)closeSettings();if(('f'===e.key||'F'===e.key)&&!document.fullscreenElement)document.documentElement.requestFullscreen();});
 
-        function applySettings(){setPrimaryColor(settings.primaryColor);let e;e='mono'===settings.fontType?`'${settings.fontFamily}', monospace`:'serif'===settings.fontType?`'${settings.fontFamily}', serif`:`'${settings.fontFamily}', -apple-system, BlinkMacSystemFont, sans-serif`;root.style.setProperty('--font-family',e);fontOptions.forEach(e=>{e.classList.remove('active');e.dataset.font===settings.fontFamily&&e.dataset.type===settings.fontType&&e.classList.add('active');});root.style.setProperty('--font-size',`${settings.fontSize}px`);fontSizeSlider.value=settings.fontSize;fontSizeValue.textContent=`${settings.fontSize}px`;root.style.setProperty('--font-weight',settings.fontWeight);const t=weights.indexOf(settings.fontWeight);fontWeightSlider.value=t+1;fontWeightValue.textContent=weightLabels[t];timeFormatToggle.classList.toggle('active',24===settings.timeFormat);showDateToggle.classList.toggle('active',settings.showDate);showSecondsToggle.classList.toggle('active',settings.showSeconds);document.getElementById('location-input').value=settings.weatherLocation;}
+        function applySettings(){
+            setPrimaryColor(settings.primaryColor);
+            let e;
+            e='mono'===settings.fontType?`'${settings.fontFamily}', monospace`:'serif'===settings.fontType?`'${settings.fontFamily}', serif`:`'${settings.fontFamily}', -apple-system, BlinkMacSystemFont, sans-serif`;
+            root.style.setProperty('--font-family',e);
+            fontOptions.forEach(e=>{e.classList.remove('active');e.dataset.font===settings.fontFamily&&e.dataset.type===settings.fontType&&e.classList.add('active');});
+            root.style.setProperty('--font-size',`${settings.fontSize}px`);
+            fontSizeSlider.value=settings.fontSize;
+            fontSizeValue.textContent=`${settings.fontSize}px`;
+            root.style.setProperty('--font-weight',settings.fontWeight);
+            const t=weights.indexOf(settings.fontWeight);
+            fontWeightSlider.value=t+1;
+            fontWeightValue.textContent=weightLabels[t];
+            timeFormatToggle.classList.toggle('active',24===settings.timeFormat);
+            showDateToggle.classList.toggle('active',settings.showDate);
+            showSecondsToggle.classList.toggle('active',settings.showSeconds);
+            document.getElementById('location-input').value=settings.weatherLocation;
+            
+            const extendedToggle = document.getElementById('weather-extended-toggle');
+            const indicesToggle = document.getElementById('weather-indices-toggle');
+            const forecastToggle = document.getElementById('weather-forecast-toggle');
+            
+            if (extendedToggle) extendedToggle.classList.toggle('active', !!settings.weatherExtended);
+            if (indicesToggle) indicesToggle.classList.toggle('active', !!settings.weatherIndices);
+            if (forecastToggle) forecastToggle.classList.toggle('active', !!settings.weatherForecast);
+        }
         async function loadAll(){
             try {
                 const images = await dbGetAll(STORE_IMAGES);
@@ -874,12 +1364,22 @@
                     
                     console.log('📋 [排序后] 组件顺序:', widgets.map(w => `[${w.position}]${w.type}`).join(' → '));
                     
+                    const hasWeatherWidget = widgets.some(w => w.type === 'weather');
+                    
                     // 按顺序同步创建小组件，保持顺序
                     for(let i = 0; i < widgets.length; i++){
                         const w = widgets[i];
                         console.log(`   创建组件 ${i+1}/${widgets.length}: ${w.type} (${w.id})`);
                         createWidget(w.type, w.id);
                         activeWidgets.push({id:w.id,type:w.type,position:w.position});
+                    }
+                    
+                    // 如果有天气小组件，显示天气设置面板
+                    if (hasWeatherWidget) {
+                        const weatherSettingsSection = document.getElementById('weather-settings');
+                        if (weatherSettingsSection) {
+                            weatherSettingsSection.style.display = 'block';
+                        }
                     }
                     
                     // 创建完成后，记录实际的 DOM 顺序
@@ -912,7 +1412,7 @@
             }
         }
 
-        const defaultBg='img/s.png';bgLayer.style.backgroundImage=`url(${defaultBg})`;initDB().then(()=>{loadAll();updateTime();setInterval(updateWeatherWidget,30*60*1000);});
+        const defaultBg='img/s.png';bgLayer.style.backgroundImage=`url(${defaultBg})`;initDB().then(()=>{loadAll();updateTime();setInterval(updateWeatherWidget,30*60*1000);setupNewFeatures();});
     </script>
 </body>
 </html>
