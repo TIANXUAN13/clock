@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>液态玻璃时钟 | Liquid Glass Clock</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Variables for theming */
+        :root {
+            --primary-color: #007AFF;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --glass-shadow: rgba(0, 0, 0, 0.1);
+            --text-color: #ffffff;
+            --text-shadow: rgba(0, 0, 0, 0.3);
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-size: 120px;
+            --font-weight: 300;
+            --time-format: 24;
+            --show-date: 1;
+            --transition-speed: 0.3s;
+        }
+
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            background: #000;
+        }
+
+        /* Background layer */
+        .background-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 0;
+            transition: background-image 0.5s ease;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(0, 0, 0, 0.2) 0%,
+                rgba(0, 0, 0, 0.1) 50%,
+                rgba(0, 0, 0, 0.3) 100%
+            );
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Main clock container */
+        .clock-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 80px;
+            min-width: 700px;
+        }
+
+        /* Liquid Glass Effect */
+        .liquid-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            box-shadow: 
+                0 8px 32px 0 var(--glass-shadow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            min-width: 600px;
+            padding: 20px 0;
+        }
+
+        /* Glass shine effect */
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: shine 8s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shine {
+            0%, 100% { left: -100%; }
+            50% { left: 100%; }
+        }
+
+        /* Edge highlight */
+        .liquid-glass::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 30px;
+            padding: 2px;
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.4) 0%,
+                transparent 30%,
+                transparent 70%,
+                rgba(255, 255, 255, 0.2) 100%
+            );
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* Inner glow animation */
+        .inner-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(
+                ellipse at center,
+                rgba(255, 255, 255, 0.1) 0%,
+                transparent 70%
+            );
+            animation: pulse 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        /* Time display */
+        .time-display {
+            font-size: var(--font-size);
+            font-weight: var(--font-weight);
+            color: var(--text-color);
+            text-shadow: 0 2px 20px var(--text-shadow);
+            letter-spacing: -0.02em;
+            line-height: 1;
+            position: relative;
+            z-index: 2;
+            transition: all var(--transition-speed) ease;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Seconds indicator */
+        .seconds-indicator {
+            font-size: calc(var(--font-size) * 0.35);
+            font-weight: 300;
+            opacity: 0.8;
+            margin-left: 10px;
+            vertical-align: super;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px var(--primary-color);
+            transition: all var(--transition-speed) ease;
+        }
+
+        /* Date display */
+        .date-display {
+            font-size: calc(var(--font-size) * 0.18);
+            font-weight: 400;
+            color: var(--text-color);
+            opacity: 0.9;
+            margin-top: 30px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px var(--text-shadow);
+            transition: all var(--transition-speed) ease;
+            padding: 0 20px;
+        }
+
+        /* AM/PM indicator */
+        .ampm-indicator {
+            font-size: calc(var(--font-size) * 0.25);
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-left: 15px;
+            vertical-align: middle;
+            text-shadow: 0 0 15px var(--primary-color);
+        }
+
+        /* Settings button */
+        .settings-btn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 100;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 4px 20px var(--glass-shadow);
+        }
+
+        .settings-btn:hover {
+            transform: rotate(90deg) scale(1.1);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .settings-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--text-color);
+        }
+
+        /* Settings panel */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -450px;
+            width: 450px;
+            height: 100vh;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            z-index: 200;
+            transition: right var(--transition-speed) ease;
+            overflow-y: auto;
+            padding: 40px 30px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-panel.active {
+            right: 0;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .close-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #fff;
+        }
+
+        /* Settings sections */
+        .settings-section {
+            margin-bottom: 35px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 20px;
+        }
+
+        /* Color themes */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+        }
+
+        .color-option {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            cursor: pointer;
+            position: relative;
+            transition: all var(--transition-speed) ease;
+            border: 2px solid transparent;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: #fff;
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .color-option.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* Custom color picker */
+        .custom-color-wrapper {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .custom-color-input {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .custom-color-input::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .custom-color-input::-webkit-color-swatch {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+        }
+
+        .custom-color-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        /* Font options */
+        .font-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .font-option {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .font-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .font-option.active {
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .font-name {
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .font-preview {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Sliders */
+        .slider-wrapper {
+            margin-bottom: 20px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-color);
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+
+        /* Toggle switches */
+        .toggle-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .toggle-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background var(--transition-speed) ease;
+        }
+
+        .toggle.active {
+            background: var(--primary-color);
+        }
+
+        .toggle-knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform var(--transition-speed) ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle.active .toggle-knob {
+            transform: translateX(24px);
+        }
+
+        /* Background image selector */
+        .image-upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            margin-bottom: 20px;
+        }
+
+        .image-upload-area:hover {
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .image-upload-area.dragover {
+            border-color: var(--primary-color);
+            background: rgba(var(--primary-color-rgb), 0.1);
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 15px;
+            fill: rgba(255, 255, 255, 0.5);
+        }
+
+        .upload-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .upload-hint {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* Image gallery */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .image-gallery::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .image-gallery::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .image-gallery::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .gallery-item {
+            aspect-ratio: 16/10;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            border: 2px solid transparent;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+
+        .gallery-item.active {
+            border-color: var(--primary-color);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-item .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity var(--transition-speed) ease;
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .gallery-item:hover .remove-btn {
+            opacity: 1;
+        }
+
+        /* Reset button */
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            margin-top: 20px;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Overlay for settings panel */
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 150;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .settings-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .clock-container {
+                min-width: auto;
+                width: 95%;
+                padding: 40px 30px;
+            }
+
+            .liquid-glass {
+                min-width: auto;
+                width: 100%;
+                padding: 15px 0;
+            }
+
+            :root {
+                --font-size: 60px;
+            }
+
+            .seconds-indicator {
+                font-size: calc(var(--font-size) * 0.4);
+            }
+
+            .date-display {
+                font-size: calc(var(--font-size) * 0.22);
+                margin-top: 20px;
+                padding: 0 15px;
+            }
+
+            .settings-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .settings-btn {
+                top: 20px;
+                right: 20px;
+                width: 44px;
+                height: 44px;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .image-gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            :root {
+                --font-size: 45px;
+            }
+
+            .clock-container {
+                padding: 30px 15px;
+            }
+
+            .date-display {
+                font-size: calc(var(--font-size) * 0.25);
+                letter-spacing: 0.05em;
+                margin-top: 15px;
+                padding: 0 10px;
+            }
+
+            .liquid-glass {
+                border-radius: 20px;
+                padding: 10px 0;
+            }
+
+            .liquid-glass::after {
+                border-radius: 20px;
+            }
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Hover effect on clock */
+        .clock-container:hover .liquid-glass {
+            transform: scale(1.02);
+            transition: transform 0.5s ease;
+        }
+
+        /* Fullscreen button */
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 4px 20px var(--glass-shadow);
+        }
+
+        .fullscreen-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .fullscreen-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--text-color);
+        }
+
+        @media (max-width: 768px) {
+            .fullscreen-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 44px;
+                height: 44px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background layers -->
+    <div class="background-layer" id="bg-layer"></div>
+    <div class="background-overlay"></div>
+
+    <!-- Clock container -->
+    <div class="clock-container">
+        <div class="liquid-glass">
+            <div class="inner-glow"></div>
+            <div class="time-display" id="time-display">
+                <span id="time-text">00:00</span><span class="seconds-indicator" id="seconds">00</span><span class="ampm-indicator" id="ampm"></span>
+            </div>
+            <div class="date-display" id="date-display" style="display: block;">
+                星期一, 1月1日, 2024
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings button -->
+    <button class="settings-btn" id="settings-btn" aria-label="设置">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63a.75.75 0 0 0 .18-.96l-2-3.46a.75.75 0 0 0-.9-.33l-2.49 1a7.03 7.03 0 0 0-1.7-.98l-.38-2.65A.75.75 0 0 0 13 2h-4a.75.75 0 0 0-.74.62l-.38 2.65c-.62.25-1.2.57-1.7.98l-2.49-1a.75.75 0 0 0-.9.33l-2 3.46c-.18.33-.08.74.18.96l2.11 1.63c-.04.34-.07.67-.07 1 0 .33.03.66.07.97l-2.11 1.63a.75.75 0 0 0-.18.96l2 3.46c.18.33.58.45.9.33l2.49-1.01c.5.42 1.08.74 1.7.99l.38 2.65c.06.4.38.69.74.69h4c.36 0 .68-.29.74-.62l.38-2.65c.62-.25 1.2-.58 1.7-.99l2.49 1.01c.32.12.72 0 .9-.33l2-3.46c.18-.33.08-.73-.18-.96l-2.11-1.63Z"/>
+        </svg>
+    </button>
+
+    <!-- Fullscreen button -->
+    <button class="fullscreen-btn" id="fullscreen-btn" aria-label="全屏">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="fullscreen-icon">
+            <path d="M5 5h5v2H7v3H5V5zm9 0h5v5h-2V7h-3V5zm0 9h5v5h-2v-3h-3v-2zm-9 0h2v3h3v2H5v-5z"/>
+        </svg>
+    </button>
+
+    <!-- Settings overlay -->
+    <div class="settings-overlay" id="settings-overlay"></div>
+
+    <!-- Settings panel -->
+    <div class="settings-panel" id="settings-panel">
+        <div class="settings-header">
+            <h2 class="settings-title">设置</h2>
+            <button class="close-btn" id="close-btn" aria-label="关闭">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59 7.11 5.7A.996.996 0 1 0 5.7 7.11L10.59 12 5.7 16.89a.996.996 0 1 0 1.41 1.41L12 13.41l4.89 4.89a.996.996 0 1 0 1.41-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Color Theme Section -->
+        <div class="settings-section">
+            <h3 class="section-title">颜色主题</h3>
+            <div class="color-grid">
+                <div class="color-option active" data-color="#007AFF" style="background: #007AFF;" title="苹果蓝"></div>
+                <div class="color-option" data-color="#AF52DE" style="background: #AF52DE;" title="紫色"></div>
+                <div class="color-option" data-color="#FF9500" style="background: #FF9500;" title="橙色"></div>
+                <div class="color-option" data-color="#34C759" style="background: #34C759;" title="绿色"></div>
+                <div class="color-option" data-color="#FF3B30" style="background: #FF3B30;" title="红色"></div>
+                <div class="color-option" data-color="#5856D6" style="background: #5856D6;" title="靛蓝"></div>
+                <div class="color-option" data-color="#FF2D55" style="background: #FF2D55;" title="粉红"></div>
+                <div class="color-option" data-color="#5AC8FA" style="background: #5AC8FA;" title="天蓝"></div>
+                <div class="color-option" data-color="#FFCC00" style="background: #FFCC00;" title="黄色"></div>
+                <div class="color-option" data-color="#8E8E93" style="background: #8E8E93;" title="灰色"></div>
+            </div>
+            <div class="custom-color-wrapper">
+                <input type="color" class="custom-color-input" id="custom-color" value="#007AFF">
+                <span class="custom-color-label">自定义颜色</span>
+            </div>
+        </div>
+
+        <!-- Font Section -->
+        <div class="settings-section">
+            <h3 class="section-title">字体样式</h3>
+            <div class="font-grid">
+                <div class="font-option active" data-font="Inter" data-type="sans">
+                    <span class="font-name" style="font-family: Inter, sans-serif;">SF Pro Display</span>
+                    <span class="font-preview" style="font-family: Inter, sans-serif;">Aa</span>
+                </div>
+                <div class="font-option" data-font="Inter" data-type="sans">
+                    <span class="font-name" style="font-family: Inter, sans-serif;">Inter</span>
+                    <span class="font-preview" style="font-family: Inter, sans-serif;">Aa</span>
+                </div>
+                <div class="font-option" data-font="JetBrains Mono" data-type="mono">
+                    <span class="font-name" style="font-family: 'JetBrains Mono', monospace;">JetBrains Mono</span>
+                    <span class="font-preview" style="font-family: 'JetBrains Mono', monospace;">Aa</span>
+                </div>
+                <div class="font-option" data-font="Playfair Display" data-type="serif">
+                    <span class="font-name" style="font-family: 'Playfair Display', serif;">Playfair Display</span>
+                    <span class="font-preview" style="font-family: 'Playfair Display', serif;">Aa</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Font Size Slider -->
+        <div class="settings-section">
+            <h3 class="section-title">字体大小</h3>
+            <div class="slider-wrapper">
+                <div class="slider-label">
+                    <span>小号</span>
+                    <span id="font-size-value">120px</span>
+                    <span>大号</span>
+                </div>
+                <input type="range" class="slider" id="font-size-slider" min="40" max="200" value="120">
+            </div>
+        </div>
+
+        <!-- Font Weight -->
+        <div class="settings-section">
+            <h3 class="section-title">字重</h3>
+            <div class="slider-wrapper">
+                <div class="slider-label">
+                    <span>细体</span>
+                    <span id="font-weight-value">Light</span>
+                    <span>粗体</span>
+                </div>
+                <input type="range" class="slider" id="font-weight-slider" min="1" max="4" value="1" step="1">
+            </div>
+        </div>
+
+        <!-- Time Format Toggle -->
+        <div class="settings-section">
+            <h3 class="section-title">时间格式</h3>
+            <div class="toggle-wrapper">
+                <span class="toggle-label">24小时制</span>
+                <div class="toggle active" id="time-format-toggle">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="toggle-wrapper">
+                <span class="toggle-label">显示日期</span>
+                <div class="toggle active" id="show-date-toggle">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="toggle-wrapper">
+                <span class="toggle-label">显示秒数</span>
+                <div class="toggle active" id="show-seconds-toggle">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Background Images Section -->
+        <div class="settings-section">
+            <h3 class="section-title">背景图片</h3>
+            <div class="image-upload-area" id="upload-area">
+                <svg class="upload-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                </svg>
+                <div class="upload-text">点击或拖拽上传图片</div>
+                <div class="upload-hint">支持 JPG, PNG, WEBP 格式</div>
+            </div>
+            <input type="file" id="file-input" accept="image/*" multiple>
+            <div class="image-gallery" id="image-gallery"></div>
+        </div>
+
+        <!-- Reset Button -->
+        <button class="reset-btn" id="reset-btn">恢复默认设置</button>
+    </div>
+
+    <script>
+        // ============================================
+        // Clock Application - Liquid Glass Edition
+        // ============================================
+
+        // Default settings
+        const defaultSettings = {
+            primaryColor: '#007AFF',
+            fontFamily: 'Inter',
+            fontType: 'sans',
+            fontSize: 120,
+            fontWeight: 300,
+            timeFormat: 24,
+            showDate: true,
+            showSeconds: true,
+            backgroundImages: [],
+            currentBackground: null
+        };
+
+        // Current settings
+        let settings = { ...defaultSettings };
+
+        // DOM Elements
+        const timeText = document.getElementById('time-text');
+        const secondsEl = document.getElementById('seconds');
+        const ampmEl = document.getElementById('ampm');
+        const dateDisplay = document.getElementById('date-display');
+        const bgLayer = document.getElementById('bg-layer');
+        const root = document.documentElement;
+
+        // Settings panel elements
+        const settingsBtn = document.getElementById('settings-btn');
+        const closeBtn = document.getElementById('close-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        const settingsOverlay = document.getElementById('settings-overlay');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+        // ============================================
+        // Time Display Functions
+        // ============================================
+
+        function updateTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            // Handle 12/24 hour format
+            let ampm = '';
+            if (settings.timeFormat === 12) {
+                ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+            }
+            
+            // Format time components
+            const hoursStr = hours.toString().padStart(2, '0');
+            const minutesStr = minutes.toString().padStart(2, '0');
+            const secondsStr = seconds.toString().padStart(2, '0');
+            
+            // Update time display
+            timeText.textContent = `${hoursStr}:${minutesStr}`;
+            
+            // Update seconds
+            if (settings.showSeconds) {
+                secondsEl.textContent = secondsStr;
+                secondsEl.style.display = 'inline';
+            } else {
+                secondsEl.style.display = 'none';
+            }
+            
+            // Update AM/PM
+            ampmEl.textContent = ampm;
+            
+            // Update date
+            if (settings.showDate) {
+                const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+                const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                const dayName = days[now.getDay()];
+                const monthName = months[now.getMonth()];
+                const date = now.getDate();
+                const year = now.getFullYear();
+                dateDisplay.textContent = `${dayName}, ${monthName}${date}日, ${year}`;
+                dateDisplay.style.display = 'block';
+            } else {
+                dateDisplay.style.display = 'none';
+            }
+        }
+
+        // Start clock
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // ============================================
+        // Settings Panel Functions
+        // ============================================
+
+        function openSettings() {
+            settingsPanel.classList.add('active');
+            settingsOverlay.classList.add('active');
+        }
+
+        function closeSettings() {
+            settingsPanel.classList.remove('active');
+            settingsOverlay.classList.remove('active');
+        }
+
+        settingsBtn.addEventListener('click', openSettings);
+        closeBtn.addEventListener('click', closeSettings);
+        settingsOverlay.addEventListener('click', closeSettings);
+
+        // ============================================
+        // Color Theme Functions
+        // ============================================
+
+        const colorOptions = document.querySelectorAll('.color-option');
+        const customColorInput = document.getElementById('custom-color');
+
+        function setPrimaryColor(color) {
+            settings.primaryColor = color;
+            root.style.setProperty('--primary-color', color);
+            
+            // Update RGB version for shadows
+            const rgb = hexToRgb(color);
+            root.style.setProperty('--primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+            
+            // Update active state
+            colorOptions.forEach(opt => {
+                opt.classList.remove('active');
+                if (opt.dataset.color === color) {
+                    opt.classList.add('active');
+                }
+            });
+            
+            customColorInput.value = color;
+            saveSettings();
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 0, g: 0, b: 0 };
+        }
+
+        colorOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                setPrimaryColor(option.dataset.color);
+            });
+        });
+
+        customColorInput.addEventListener('input', (e) => {
+            setPrimaryColor(e.target.value);
+        });
+
+        // ============================================
+        // Font Functions
+        // ============================================
+
+        const fontOptions = document.querySelectorAll('.font-option');
+
+        function setFont(fontFamily, fontType) {
+            settings.fontFamily = fontFamily;
+            settings.fontType = fontType;
+            
+            let fontStack;
+            if (fontType === 'mono') {
+                fontStack = `'${fontFamily}', monospace`;
+            } else if (fontType === 'serif') {
+                fontStack = `'${fontFamily}', serif`;
+            } else {
+                fontStack = `'${fontFamily}', -apple-system, BlinkMacSystemFont, sans-serif`;
+            }
+            
+            root.style.setProperty('--font-family', fontStack);
+            
+            // Update active state
+            fontOptions.forEach(opt => {
+                opt.classList.remove('active');
+                if (opt.dataset.font === fontFamily && opt.dataset.type === fontType) {
+                    opt.classList.add('active');
+                }
+            });
+            
+            saveSettings();
+        }
+
+        fontOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                setFont(option.dataset.font, option.dataset.type);
+            });
+        });
+
+        // ============================================
+        // Font Size Slider
+        // ============================================
+
+        const fontSizeSlider = document.getElementById('font-size-slider');
+        const fontSizeValue = document.getElementById('font-size-value');
+
+        fontSizeSlider.addEventListener('input', (e) => {
+            const size = e.target.value;
+            settings.fontSize = size;
+            root.style.setProperty('--font-size', `${size}px`);
+            fontSizeValue.textContent = `${size}px`;
+        });
+
+        fontSizeSlider.addEventListener('change', saveSettings);
+
+        // ============================================
+        // Font Weight Slider
+        // ============================================
+
+        const fontWeightSlider = document.getElementById('font-weight-slider');
+        const fontWeightValue = document.getElementById('font-weight-value');
+        const weights = [300, 400, 600, 700];
+        const weightLabels = ['Light', 'Regular', 'Bold', 'Heavy'];
+
+        fontWeightSlider.addEventListener('input', (e) => {
+            const index = e.target.value - 1;
+            settings.fontWeight = weights[index];
+            root.style.setProperty('--font-weight', weights[index]);
+            fontWeightValue.textContent = weightLabels[index];
+        });
+
+        fontWeightSlider.addEventListener('change', saveSettings);
+
+        // ============================================
+        // Toggle Functions
+        // ============================================
+
+        const timeFormatToggle = document.getElementById('time-format-toggle');
+        const showDateToggle = document.getElementById('show-date-toggle');
+        const showSecondsToggle = document.getElementById('show-seconds-toggle');
+
+        function setupToggle(toggle, settingKey, callback) {
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+                settings[settingKey] = toggle.classList.contains('active');
+                if (callback) callback();
+                saveSettings();
+                updateTime();
+            });
+        }
+
+        setupToggle(timeFormatToggle, 'timeFormat', () => {
+            settings.timeFormat = timeFormatToggle.classList.contains('active') ? 24 : 12;
+        });
+
+        setupToggle(showDateToggle, 'showDate');
+        setupToggle(showSecondsToggle, 'showSeconds');
+
+        // ============================================
+        // Background Image Functions
+        // ============================================
+
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const imageGallery = document.getElementById('image-gallery');
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        addBackgroundImage(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function addBackgroundImage(imageSrc) {
+            const id = Date.now().toString();
+            const imageData = { id, src: imageSrc };
+            settings.backgroundImages.push(imageData);
+            renderGallery();
+            saveSettings();
+            
+            // Auto-select first image if none selected
+            if (!settings.currentBackground) {
+                setBackgroundImage(id);
+            }
+        }
+
+        function removeBackgroundImage(id) {
+            settings.backgroundImages = settings.backgroundImages.filter(img => img.id !== id);
+            if (settings.currentBackground === id) {
+                settings.currentBackground = null;
+                bgLayer.style.backgroundImage = '';
+            }
+            renderGallery();
+            saveSettings();
+        }
+
+        function setBackgroundImage(id) {
+            settings.currentBackground = id;
+            const image = settings.backgroundImages.find(img => img.id === id);
+            if (image) {
+                bgLayer.style.backgroundImage = `url(${image.src})`;
+            }
+            renderGallery();
+            saveSettings();
+        }
+
+        function renderGallery() {
+            imageGallery.innerHTML = '';
+            settings.backgroundImages.forEach(image => {
+                const item = document.createElement('div');
+                item.className = `gallery-item ${settings.currentBackground === image.id ? 'active' : ''}`;
+                item.innerHTML = `
+                    <img src="${image.src}" alt="Background">
+                    <div class="remove-btn" data-id="${image.id}">×</div>
+                `;
+                
+                item.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('remove-btn')) {
+                        setBackgroundImage(image.id);
+                    }
+                });
+                
+                const removeBtn = item.querySelector('.remove-btn');
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeBackgroundImage(image.id);
+                });
+                
+                imageGallery.appendChild(item);
+            });
+        }
+
+        // ============================================
+        // Fullscreen Function
+        // ============================================
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log('Error attempting to enable fullscreen:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // Update fullscreen icon
+        document.addEventListener('fullscreenchange', () => {
+            const icon = document.getElementById('fullscreen-icon');
+            if (document.fullscreenElement) {
+                icon.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
+            } else {
+                icon.innerHTML = '<path d="M5 5h5v2H7v3H5V5zm9 0h5v5h-2V7h-3V5zm0 9h5v5h-2v-3h-3v-2zm-9 0h2v3h3v2H5v-5z"/>';
+            }
+        });
+
+        // ============================================
+        // LocalStorage Functions
+        // ============================================
+
+        function saveSettings() {
+            localStorage.setItem('liquidGlassClockSettings', JSON.stringify(settings));
+        }
+
+        function loadSettings() {
+            const saved = localStorage.getItem('liquidGlassClockSettings');
+            if (saved) {
+                settings = { ...defaultSettings, ...JSON.parse(saved) };
+                applySettings();
+            }
+        }
+
+        function applySettings() {
+            // Apply color
+            setPrimaryColor(settings.primaryColor);
+            
+            // Apply font
+            setFont(settings.fontFamily, settings.fontType);
+            
+            // Apply font size
+            root.style.setProperty('--font-size', `${settings.fontSize}px`);
+            fontSizeSlider.value = settings.fontSize;
+            fontSizeValue.textContent = `${settings.fontSize}px`;
+            
+            // Apply font weight
+            root.style.setProperty('--font-weight', settings.fontWeight);
+            const weightIndex = weights.indexOf(settings.fontWeight);
+            fontWeightSlider.value = weightIndex + 1;
+            fontWeightValue.textContent = weightLabels[weightIndex];
+            
+            // Apply toggles
+            timeFormatToggle.classList.toggle('active', settings.timeFormat === 24);
+            showDateToggle.classList.toggle('active', settings.showDate);
+            showSecondsToggle.classList.toggle('active', settings.showSeconds);
+            
+            // Apply background
+            renderGallery();
+            if (settings.currentBackground) {
+                const image = settings.backgroundImages.find(img => img.id === settings.currentBackground);
+                if (image) {
+                    bgLayer.style.backgroundImage = `url(${image.src})`;
+                }
+            }
+        }
+
+        // ============================================
+        // Reset Function
+        // ============================================
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            settings = { ...defaultSettings };
+            applySettings();
+            saveSettings();
+            
+            // Reset background
+            bgLayer.style.backgroundImage = '';
+        });
+
+        // ============================================
+        // Initialize
+        // ============================================
+
+        // Load default background
+        const defaultBg = 'img/s.jpg';
+        bgLayer.style.backgroundImage = `url(${defaultBg})`;
+
+        // Load saved settings
+        loadSettings();
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSettings();
+            }
+            if (e.key === 'f' || e.key === 'F') {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        // Prevent context menu on right click (optional, for cleaner look)
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.clock-container')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

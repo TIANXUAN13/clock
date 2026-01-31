@@ -1,97 +1,918 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<title> 时钟 </title>
-<script src="http://ip.ws.1 26.net/ipquery"></script>
-<script type="text/javascript">
-    dynamicIp(lc);//这是获取天气调用的方法 lc就是城市名称
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>液态玻璃时钟 | Liquid Glass Clock</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #007AFF;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --glass-shadow: rgba(0, 0, 0, 0.1);
+            --text-color: #ffffff;
+            --text-shadow: rgba(0, 0, 0, 0.3);
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-size: 120px;
+            --font-weight: 300;
+            --time-format: 24;
+            --show-date: 1;
+            --transition-speed: 0.3s;
+        }
 
-<style>
-	body{
-		height: 100%;
-		  width: 100%;
-		  background: url('img/s.jpg') no-repeat;
-		  background-size: cover;
-		  position: absolute;
-		  overflow: hidden;
-	}
-	
-	p{
-		text-align: center;
-		color: azure;
-		font-size: 40px;
-		font:italic bold 40px "楷体" ;
-	}
-	#p{
-	
-		color: cornsilk;
-		
-	}
-</style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-family);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            background: #000;
+        }
+
+        .background-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            background-repeat: no-repeat; z-index: 0;
+            transition: background-image 0.5s ease;
+        }
+
+        .background-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.4) 100%);
+            z-index: 1; pointer-events: none;
+        }
+
+        .main-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 40px; gap: 30px; overflow-y: auto;
+        }
+
+        .clock-container {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 60px 80px; min-width: 700px;
+        }
+
+        .liquid-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            box-shadow: 0 8px 32px 0 var(--glass-shadow),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                        inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+            position: relative; overflow: hidden;
+            min-width: 600px; padding: 20px 0;
+        }
+
+        .liquid-glass::before {
+            content: ''; position: absolute; top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shine 8s infinite; pointer-events: none;
+        }
+
+        @keyframes shine {
+            0%, 100% { left: -100%; }
+            50% { left: 100%; }
+        }
+
+        .liquid-glass::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 30px; padding: 2px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 30%, transparent 70%, rgba(255,255,255,0.2) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .inner-glow {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%; height: 80%;
+            background: radial-gradient(ellipse at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite; pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        .time-display {
+            font-size: var(--font-size); font-weight: var(--font-weight);
+            color: var(--text-color); text-shadow: 0 2px 20px var(--text-shadow);
+            letter-spacing: -0.02em; line-height: 1; position: relative;
+            z-index: 2; transition: all var(--transition-speed) ease;
+            font-variant-numeric: tabular-nums; text-align: center;
+        }
+
+        .seconds-indicator {
+            font-size: calc(var(--font-size) * 0.35); font-weight: 300;
+            opacity: 0.8; margin-left: 10px; vertical-align: super;
+            color: var(--primary-color); text-shadow: 0 0 20px var(--primary-color);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .date-display {
+            font-size: calc(var(--font-size) * 0.18); font-weight: 400;
+            color: var(--text-color); opacity: 0.9; margin-top: 30px;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            text-shadow: 0 2px 10px var(--text-shadow);
+            transition: all var(--transition-speed) ease; padding: 0 20px; text-align: center;
+        }
+
+        .ampm-indicator {
+            font-size: calc(var(--font-size) * 0.25); font-weight: 500;
+            color: var(--primary-color); margin-left: 15px; vertical-align: middle;
+            text-shadow: 0 0 15px var(--primary-color);
+        }
+
+        .widgets-container {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 20px; max-width: 1400px; width: 100%; padding: 0 20px;
+        }
+
+        .widget {
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px) saturate(160%);
+            -webkit-backdrop-filter: blur(30px) saturate(160%);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px 0 var(--glass-shadow),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            padding: 24px; min-width: 280px; max-width: 380px;
+            position: relative; overflow: hidden;
+            transition: all var(--transition-speed) ease; cursor: move;
+        }
+
+        .widget:hover { transform: translateY(-4px); }
+        .widget.dragging { opacity: 0.7; transform: scale(1.05) rotate(2deg); z-index: 1000; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .widget.drag-over { border: 2px dashed var(--primary-color); transform: scale(1.02); background: rgba(var(--primary-color-rgb),0.1); }
+
+        .widget-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px; padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .widget-title {
+            font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9);
+            text-transform: uppercase; letter-spacing: 0.1em;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .widget-icon { width: 20px; height: 20px; fill: var(--primary-color); }
+
+        .widget-close {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: all var(--transition-speed) ease;
+            font-size: 16px; color: #fff;
+        }
+
+        .widget:hover .widget-close { opacity: 1; }
+        .widget-close:hover { background: rgba(255,255,255,0.2); }
+        .widget-content { color: #fff; }
+
+        .weather-main { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .weather-temp { font-size: 48px; font-weight: 300; line-height: 1; }
+        .weather-icon { width: 64px; height: 64px; font-size: 64px; }
+        .weather-desc { font-size: 16px; opacity: 0.9; margin-bottom: 12px; }
+        .weather-location { font-size: 14px; opacity: 0.7; display: flex; align-items: center; gap: 6px; }
+        .weather-location svg { width: 16px; height: 16px; fill: var(--primary-color); }
+        .weather-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .weather-detail { display: flex; align-items: center; gap: 8px; font-size: 13px; opacity: 0.8; }
+        .weather-detail svg { width: 16px; height: 16px; fill: var(--primary-color); }
+
+        .todo-input-wrapper { display: flex; gap: 8px; margin-bottom: 16px; }
+        .todo-input { flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; font-size: 14px; outline: none; }
+        .todo-input::placeholder { color: rgba(255,255,255,0.5); }
+        .todo-input:focus { background: rgba(255,255,255,0.15); border-color: var(--primary-color); }
+        .todo-add-btn { padding: 10px 16px; background: var(--primary-color); border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 500; cursor: pointer; }
+        .todo-add-btn:hover { filter: brightness(1.2); }
+        .todo-list { max-height: 200px; overflow-y: auto; }
+        .todo-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .todo-checkbox { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition-speed) ease; flex-shrink: 0; }
+        .todo-checkbox:hover { border-color: var(--primary-color); }
+        .todo-checkbox.checked { background: var(--primary-color); border-color: var(--primary-color); }
+        .todo-checkbox.checked::after { content: '✓'; color: #fff; font-size: 12px; }
+        .todo-text { flex: 1; font-size: 14px; opacity: 0.9; transition: all var(--transition-speed) ease; }
+        .todo-text.completed { text-decoration: line-through; opacity: 0.5; }
+        .todo-delete { width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; font-size: 14px; color: rgba(255,255,255,0.7); }
+        .todo-item:hover .todo-delete { opacity: 1; }
+        .todo-delete:hover { background: rgba(255,59,48,0.5); color: #fff; }
+
+        .system-info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .system-info-item { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 14px; text-align: center; }
+        .system-info-label { font-size: 12px; opacity: 0.6; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .system-info-value { font-size: 20px; font-weight: 600; color: var(--primary-color); }
+        .battery-level { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .battery-fill { height: 100%; background: linear-gradient(90deg, var(--primary-color), rgba(255,255,255,0.5)); border-radius: 4px; transition: width 0.5s ease; }
+
+        .world-clock-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .world-clock-item { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 14px; text-align: center; }
+        .world-clock-city { font-size: 13px; opacity: 0.7; margin-bottom: 4px; }
+        .world-clock-time { font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+        .world-clock-date { font-size: 11px; opacity: 0.5; margin-top: 2px; }
+
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .calendar-month-year { font-size: 16px; font-weight: 600; }
+        .calendar-nav { display: flex; gap: 8px; }
+        .calendar-nav-btn { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; }
+        .calendar-nav-btn:hover { background: rgba(255,255,255,0.2); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+        .calendar-day-header { font-size: 11px; opacity: 0.5; padding: 8px 0; text-transform: uppercase; }
+        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; border-radius: 50%; cursor: pointer; transition: all var(--transition-speed) ease; }
+        .calendar-day:hover { background: rgba(255,255,255,0.1); }
+        .calendar-day.today { background: var(--primary-color); font-weight: 600; }
+        .calendar-day.other-month { opacity: 0.3; }
+
+        .settings-btn {
+            position: fixed; top: 30px; right: 30px; z-index: 100;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 4px 20px var(--glass-shadow);
+        }
+
+        .settings-btn:hover { transform: rotate(90deg) scale(1.1); background: rgba(255,255,255,0.25); }
+        .settings-btn svg { width: 24px; height: 24px; fill: var(--text-color); }
+
+        .add-widget-btn {
+            position: fixed; bottom: 30px; right: 90px; z-index: 100;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 4px 20px var(--glass-shadow);
+        }
+
+        .add-widget-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.25); }
+        .add-widget-btn svg { width: 24px; height: 24px; fill: var(--text-color); }
+
+        .fullscreen-btn {
+            position: fixed; bottom: 30px; right: 30px; z-index: 100;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 4px 20px var(--glass-shadow);
+        }
+
+        .fullscreen-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.25); }
+        .fullscreen-btn svg { width: 24px; height: 24px; fill: var(--text-color); }
+
+        .settings-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 150;
+            opacity: 0; visibility: hidden;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .settings-overlay.active { opacity: 1; visibility: visible; }
+
+        .settings-panel {
+            position: fixed; top: 0; right: -450px; width: 450px; height: 100vh;
+            background: rgba(20,20,20,0.95); backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px); z-index: 200;
+            transition: right var(--transition-speed) ease;
+            overflow-y: auto; padding: 40px 30px;
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .settings-panel.active { right: 0; }
+
+        .settings-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 40px; padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .settings-title { font-size: 24px; font-weight: 600; color: #fff; }
+
+        .close-btn {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .close-btn:hover { background: rgba(255,255,255,0.2); transform: rotate(90deg); }
+        .close-btn svg { width: 20px; height: 20px; fill: #fff; }
+
+        .settings-section { margin-bottom: 35px; }
+        .section-title { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; }
+
+        .widget-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .widget-option { background: rgba(255,255,255,0.05); border: 2px solid transparent; border-radius: 16px; padding: 20px; cursor: pointer; transition: all var(--transition-speed) ease; text-align: center; }
+        .widget-option:hover { background: rgba(255,255,255,0.1); border-color: var(--primary-color); transform: translateY(-2px); }
+        .widget-option-icon { width: 40px; height: 40px; margin: 0 auto 12px; fill: var(--primary-color); }
+        .widget-option-name { font-size: 14px; font-weight: 500; color: #fff; }
+        .widget-option-desc { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        .color-option { width: 100%; aspect-ratio: 1; border-radius: 12px; cursor: pointer; position: relative; transition: all var(--transition-speed) ease; border: 2px solid transparent; }
+        .color-option:hover { transform: scale(1.1); }
+        .color-option.active { border-color: #fff; box-shadow: 0 0 20px currentColor; }
+        .color-option.active::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 18px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+
+        .custom-color-wrapper { margin-top: 15px; display: flex; align-items: center; gap: 12px; }
+        .custom-color-input { width: 50px; height: 50px; border: none; border-radius: 12px; cursor: pointer; background: transparent; }
+        .custom-color-input::-webkit-color-swatch-wrapper { padding: 0; }
+        .custom-color-input::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0.3); border-radius: 12px; }
+        .custom-color-label { color: rgba(255,255,255,0.8); font-size: 14px; }
+
+        .font-grid { display: flex; flex-direction: column; gap: 10px; }
+        .font-option { padding: 15px 20px; background: rgba(255,255,255,0.05); border: 2px solid transparent; border-radius: 12px; cursor: pointer; transition: all var(--transition-speed) ease; display: flex; align-items: center; justify-content: space-between; }
+        .font-option:hover { background: rgba(255,255,255,0.1); }
+        .font-option.active { border-color: var(--primary-color); background: rgba(255,255,255,0.1); }
+        .font-name { font-size: 18px; color: #fff; }
+        .font-preview { font-size: 24px; color: rgba(255,255,255,0.5); }
+
+        .slider-wrapper { margin-bottom: 20px; }
+        .slider-label { display: flex; justify-content: space-between; margin-bottom: 10px; color: rgba(255,255,255,0.8); font-size: 14px; }
+        .slider { width: 100%; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); outline: none; -webkit-appearance: none; appearance: none; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--primary-color); cursor: pointer; box-shadow: 0 0 10px var(--primary-color); }
+        .slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .toggle-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .toggle-label { color: rgba(255,255,255,0.8); font-size: 14px; }
+        .toggle { position: relative; width: 50px; height: 26px; background: rgba(255,255,255,0.2); border-radius: 13px; cursor: pointer; transition: background var(--transition-speed) ease; }
+        .toggle.active { background: var(--primary-color); }
+        .toggle-knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform var(--transition-speed) ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .toggle.active .toggle-knob { transform: translateX(24px); }
+
+        .image-upload-area { border: 2px dashed rgba(255,255,255,0.3); border-radius: 16px; padding: 30px; text-align: center; cursor: pointer; transition: all var(--transition-speed) ease; margin-bottom: 20px; }
+        .image-upload-area:hover { border-color: var(--primary-color); background: rgba(255,255,255,0.05); }
+        .upload-icon { width: 48px; height: 48px; margin: 0 auto 15px; fill: rgba(255,255,255,0.5); }
+        .upload-text { color: rgba(255,255,255,0.7); font-size: 14px; }
+        .upload-hint { color: rgba(255,255,255,0.4); font-size: 12px; margin-top: 8px; }
+        #file-input { display: none; }
+
+        .image-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 5px; }
+        .gallery-item { aspect-ratio: 16/10; border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; border: 2px solid transparent; transition: all var(--transition-speed) ease; }
+        .gallery-item:hover { transform: scale(1.05); }
+        .gallery-item.active { border-color: var(--primary-color); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-item .remove-btn { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; font-size: 12px; color: #fff; }
+        .gallery-item:hover .remove-btn { opacity: 1; }
+
+        .reset-btn { width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: #fff; font-size: 14px; font-weight: 500; cursor: pointer; transition: all var(--transition-speed) ease; margin-top: 20px; }
+        .reset-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
+
+        .location-input-wrapper { display: flex; gap: 8px; margin-top: 15px; }
+        .location-input { flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; font-size: 14px; outline: none; }
+        .location-input::placeholder { color: rgba(255,255,255,0.5); }
+        .location-btn { padding: 10px 16px; background: var(--primary-color); border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 500; cursor: pointer; }
+        .location-btn:hover { filter: brightness(1.2); }
+
+        @media (max-width: 1024px) {
+            .widgets-container { max-width: 800px; }
+            .widget { min-width: 240px; max-width: 320px; }
+        }
+
+        @media (max-width: 768px) {
+            .main-container { padding: 20px; gap: 20px; }
+            .clock-container { min-width: auto; width: 100%; padding: 40px 30px; }
+            .liquid-glass { min-width: auto; width: 100%; padding: 15px 0; }
+            :root { --font-size: 60px; }
+            .seconds-indicator { font-size: calc(var(--font-size) * 0.4); }
+            .date-display { font-size: calc(var(--font-size) * 0.22); margin-top: 20px; padding: 0 15px; }
+            .widgets-container { flex-direction: column; align-items: center; }
+            .widget { min-width: 280px; max-width: 100%; width: 100%; }
+            .settings-panel { width: 100%; right: -100%; }
+            .settings-btn { top: 20px; right: 20px; width: 44px; height: 44px; }
+            .add-widget-btn, .fullscreen-btn { width: 44px; height: 44px; }
+            .add-widget-btn { right: 70px; bottom: 20px; }
+            .fullscreen-btn { right: 20px; bottom: 20px; }
+            .color-grid { grid-template-columns: repeat(4, 1fr); }
+            .image-gallery, .widget-selector { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 480px) {
+            :root { --font-size: 45px; }
+            .clock-container { padding: 30px 15px; }
+            .date-display { font-size: calc(var(--font-size) * 0.25); letter-spacing: 0.05em; margin-top: 15px; padding: 0 10px; }
+            .liquid-glass { border-radius: 20px; padding: 10px 0; }
+            .liquid-glass::after { border-radius: 20px; }
+            .widget { padding: 18px; min-width: 260px; }
+            .weather-temp { font-size: 36px; }
+            .weather-icon { width: 48px; height: 48px; font-size: 48px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
+
+        .clock-container:hover .liquid-glass { transform: scale(1.02); transition: transform 0.5s ease; }
+        .hidden { display: none !important; }
+        .loading-spinner { width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.3); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
+    <div class="background-layer" id="bg-layer"></div>
+    <div class="background-overlay"></div>
 
-<p id="demo"></p>
-<p id="weather1"></p>
-<script>
-	function mytime(){
-		var d=new Date();
-		var years=d.getFullYear();
-		var month=d.getMonth()+1;
-		var date=d.getDate()
-		var hour=d.getHours();
-		var Minute=d.getMinutes();
-		var seconds=d.getSeconds();
-		 seconds = seconds < 10 ? '0' + seconds : seconds;
-		var day=d.getDay(); 
-		var dayx;
-		if(day==1)
-		{
-			dayx="星期一";
-		}
-		if(day==2)
-		{
-			dayx="星期二";
-		}
-		if(day==3)
-		{
-			dayx="星期三";
-		}
-		if(day==4)
-		{
-			dayx="星期四";
-		}
-		if(day==5)
-		{
-			dayx="星期五";
-		}
-		if(day==6)
-		{
-			dayx="星期六";
-		}
-		if(day==7)
-		{
-			dayx="星期天"
-		}
-		return "现在是："+years+"年"+month+"月"+date+"日"+hour+"："+Minute+"："+seconds+dayx;
-	}
-	
-	setInterval(function(){
-		document.getElementById("demo").innerHTML = mytime()},100);
-	
-	
-	
-	
-</script>
-<div >
-	<iframe name="weather_inc" 
-	src="http://i.tianqi.com/index.php?c=code&id=7" 
-	style="border:solid 1px rgb(212,210,208)" 
-	width="260" height="130" frameborder="0" 
-	marginwidth="0" marginheight="0" scrolling="no">
-</iframe>
-</div>
+    <div class="main-container">
+        <div class="clock-section">
+            <div class="clock-container">
+                <div class="liquid-glass">
+                    <div class="inner-glow"></div>
+                    <div class="time-display" id="time-display">
+                        <span id="time-text">00:00</span><span class="seconds-indicator" id="seconds">00</span><span class="ampm-indicator" id="ampm"></span>
+                    </div>
+                    <div class="date-display" id="date-display">星期一, 1月1日, 2024</div>
+                </div>
+            </div>
+        </div>
+        <div class="widgets-container" id="widgets-container"></div>
+    </div>
+
+    <button class="settings-btn" id="settings-btn"><svg viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63a.75.75 0 0 0 .18-.96l-2-3.46a.75.75 0 0 0-.9-.33l-2.49 1a7.03 7.03 0 0 0-1.7-.98l-.38-2.65A.75.75 0 0 0 13 2h-4a.75.75 0 0 0-.74.62l-.38 2.65c-.62.25-1.2.57-1.7.98l-2.49-1a.75.75 0 0 0-.9.33l-2 3.46c-.18.33-.08.74.18.96l2.11 1.63c-.04.34-.07.67-.07 1 0 .33.03.66.07.97l-2.11 1.63a.75.75 0 0 0-.18.96l2 3.46c.18.33.58.45.9.33l2.49-1.01c.5.42 1.08.74 1.7.99l.38 2.65c.06.4.38.69.74.69h4c.36 0 .68-.29.74-.62l.38-2.65c.62-.25 1.2-.58 1.7-.99l2.49 1.01c.32.12.72 0 .9-.33l2-3.46c.18-.33.08-.73-.18-.96l-2.11-1.63Z"/></svg></button>
+
+    <button class="add-widget-btn" id="add-widget-btn"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+
+    <button class="fullscreen-btn" id="fullscreen-btn"><svg viewBox="0 0 24 24" id="fullscreen-icon"><path d="M5 5h5v2H7v3H5V5zm9 0h5v5h-2V7h-3V5zm0 9h5v5h-2v-3h-3v-2zm-9 0h2v3h3v2H5v-5z"/></svg></button>
+
+    <div class="settings-overlay" id="settings-overlay"></div>
+
+    <div class="settings-panel" id="settings-panel">
+        <div class="settings-header">
+            <h2 class="settings-title">设置</h2>
+            <button class="close-btn" id="close-btn"><svg viewBox="0 0 24 24"><path d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59 7.11 5.7A.996.996 0 1 0 5.7 7.11L10.59 12 5.7 16.89a.996.996 0 1 0 1.41 1.41L12 13.41l4.89 4.89a.996.996 0 1 0 1.41-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4z"/></svg></button>
+        </div>
+
+        <div class="settings-section">
+            <h3 class="section-title">小组件</h3>
+            <div class="widget-selector" id="widget-selector">
+                <div class="widget-option" data-widget="weather"><svg class="widget-option-icon" viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 0-9 9c0 4.97 4.03 9 9 9a9 9 0 0 0 9-9 9 9 0 0 0-9-9z"/></svg><div class="widget-option-name">天气</div><div class="widget-option-desc">实时天气信息</div></div>
+                <div class="widget-option" data-widget="todo"><svg class="widget-option-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg><div class="widget-option-name">待办事项</div><div class="widget-option-desc">任务管理清单</div></div>
+                <div class="widget-option" data-widget="system"><svg class="widget-option-icon" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2H0c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2h-4z"/></svg><div class="widget-option-name">系统信息</div><div class="widget-option-desc">设备状态监控</div></div>
+                <div class="widget-option" data-widget="worldclock"><svg class="widget-option-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2z"/></svg><div class="widget-option-name">世界时钟</div><div class="widget-option-desc">多地时间显示</div></div>
+                <div class="widget-option" data-widget="calendar"><svg class="widget-option-icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg><div class="widget-option-name">日历</div><div class="widget-option-desc">月历视图</div></div>
+            </div>
+        </div>
+
+        <div class="settings-section" id="weather-settings" style="display:none;">
+            <h3 class="section-title">天气位置</h3>
+            <div class="location-input-wrapper">
+                <input type="text" class="location-input" id="location-input" placeholder="输入城市名称（如：北京）">
+                <button class="location-btn" id="location-btn">更新</button>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3 class="section-title">颜色主题</h3>
+            <div class="color-grid">
+                <div class="color-option active" data-color="#007AFF" style="background:#007AFF"></div>
+                <div class="color-option" data-color="#AF52DE" style="background:#AF52DE"></div>
+                <div class="color-option" data-color="#FF9500" style="background:#FF9500"></div>
+                <div class="color-option" data-color="#34C759" style="background:#34C759"></div>
+                <div class="color-option" data-color="#FF3B30" style="background:#FF3B30"></div>
+                <div class="color-option" data-color="#5856D6" style="background:#5856D6"></div>
+                <div class="color-option" data-color="#FF2D55" style="background:#FF2D55"></div>
+                <div class="color-option" data-color="#5AC8FA" style="background:#5AC8FA"></div>
+                <div class="color-option" data-color="#FFCC00" style="background:#FFCC00"></div>
+                <div class="color-option" data-color="#8E8E93" style="background:#8E8E93"></div>
+            </div>
+            <div class="custom-color-wrapper">
+                <input type="color" class="custom-color-input" id="custom-color" value="#007AFF">
+                <span class="custom-color-label">自定义颜色</span>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3 class="section-title">字体样式</h3>
+            <div class="font-grid">
+                <div class="font-option active" data-font="Inter" data-type="sans"><span class="font-name" style="font-family:Inter,sans-serif">SF Pro Display</span><span class="font-preview" style="font-family:Inter,sans-serif">Aa</span></div>
+                <div class="font-option" data-font="Inter" data-type="sans"><span class="font-name" style="font-family:Inter,sans-serif">Inter</span><span class="font-preview" style="font-family:Inter,sans-serif">Aa</span></div>
+                <div class="font-option" data-font="JetBrains Mono" data-type="mono"><span class="font-name" style="font-family:'JetBrains Mono',monospace">JetBrains Mono</span><span class="font-preview" style="font-family:'JetBrains Mono',monospace">Aa</span></div>
+                <div class="font-option" data-font="Playfair Display" data-type="serif"><span class="font-name" style="font-family:'Playfair Display',serif">Playfair Display</span><span class="font-preview" style="font-family:'Playfair Display',serif">Aa</span></div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3 class="section-title">字体大小</h3>
+            <div class="slider-wrapper"><div class="slider-label"><span>小号</span><span id="font-size-value">120px</span><span>大号</span></div>
+            <input type="range" class="slider" id="font-size-slider" min="40" max="200" value="120"></div>
+        </div>
+
+        <div class="settings-section">
+            <h3 class="section-title">字重</h3>
+            <div class="slider-wrapper"><div class="slider-label"><span>细体</span><span id="font-weight-value">Light</span><span>粗体</span></div>
+            <input type="range" class="slider" id="font-weight-slider" min="1" max="4" value="1" step="1"></div>
+        </div>
+
+        <div class="settings-section">
+            <h3 class="section-title">时间格式</h3>
+            <div class="toggle-wrapper"><span class="toggle-label">24小时制</span><div class="toggle active" id="time-format-toggle"><div class="toggle-knob"></div></div></div>
+            <div class="toggle-wrapper"><span class="toggle-label">显示日期</span><div class="toggle active" id="show-date-toggle"><div class="toggle-knob"></div></div></div>
+            <div class="toggle-wrapper"><span class="toggle-label">显示秒数</span><div class="toggle active" id="show-seconds-toggle"><div class="toggle-knob"></div></div></div>
+        </div>
+
+        <div class="settings-section">
+            <h3 class="section-title">背景图片</h3>
+            <div class="image-upload-area" id="upload-area"><svg class="upload-icon" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg><div class="upload-text">点击或拖拽上传图片</div><div class="upload-hint">支持 JPG, PNG, WEBP 格式</div></div>
+            <input type="file" id="file-input" accept="image/*" multiple>
+            <div class="image-gallery" id="image-gallery"></div>
+        </div>
+
+        <button class="reset-btn" id="reset-btn">恢复默认设置</button>
+    </div>
+
+    <script>
+        const DB_NAME = 'LiquidGlassClockDB', DB_VERSION = 1;
+        const STORE_IMAGES = 'backgroundImages', STORE_SETTINGS = 'settings', STORE_WIDGETS = 'widgets', STORE_TODOS = 'todos';
+        let db = null, settings = {primaryColor:'#007AFF',fontFamily:'Inter',fontType:'sans',fontSize:120,fontWeight:300,timeFormat:24,showDate:true,showSeconds:true,currentBackground:null,weatherLocation:'北京'}, activeWidgets = [], todos = [];
+
+        async function initDB(){return new Promise((r,e)=>{const i=indexedDB.open(DB_NAME,DB_VERSION);i.onerror=()=>e(i.error);i.onsuccess=()=>{db=i.result;r(db)};i.onupgradeneeded=(e)=>{const s=e.target.result;!s.objectStoreNames.contains(STORE_IMAGES)&&s.createObjectStore(STORE_IMAGES,{keyPath:'id'});!s.objectStoreNames.contains(STORE_SETTINGS)&&s.createObjectStore(STORE_SETTINGS,{keyPath:'key'});!s.objectStoreNames.contains(STORE_WIDGETS)&&s.createObjectStore(STORE_WIDGETS,{keyPath:'id'});!s.objectStoreNames.contains(STORE_TODOS)&&s.createObjectStore(STORE_TODOS,{keyPath:'id',autoIncrement:true});};});}
+        function dbPut(s,e){return new Promise((r,t)=>{const a=db.transaction(s,'readwrite'),o=a.objectStore(s),n=o.put(e);n.onsuccess=()=>r(n.result);n.onerror=()=>t(n.error);});}
+        function dbGet(s,e){return new Promise((r,t)=>{const a=db.transaction(s,'readonly'),o=a.objectStore(s),n=o.get(e);n.onsuccess=()=>r(n.result);n.onerror=()=>t(n.error);});}
+        function dbGetAll(s){return new Promise((r,t)=>{const a=db.transaction(s,'readonly'),o=a.objectStore(s),n=o.getAll();n.onsuccess=()=>r(n.result);n.onerror=()=>t(n.error);});}
+        function dbDelete(s,e){return new Promise((r,t)=>{const a=db.transaction(s,'readwrite'),o=a.objectStore(s),n=o.delete(e);n.onsuccess=()=>r();n.onerror=()=>t(n.error);});}
+        function dbClear(s){return new Promise((r,t)=>{const a=db.transaction(s,'readwrite'),o=a.objectStore(s),n=o.clear();n.onsuccess=()=>r();n.onerror=()=>t(n.error);});}
+
+        function hexToRgb(hex){const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);return r?{r:parseInt(r[1],16),g:parseInt(r[2],16),b:parseInt(r[3],16)}:{r:0,g:0,b:0};}
+
+        const defaultSettings = {...settings};
+
+        const widgetTemplates = {
+            weather:{title:'天气',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 0-9 9c0 4.97 4.03 9 9 9a9 9 0 0 0 9-9 9 9 0 0 0-9-9z"/></svg>',content:`<div class="weather-main"><div class="weather-temp">--°</div><div class="weather-icon">☁️</div></div><div class="weather-desc">加载中...</div><div class="weather-location"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>${settings.weatherLocation}</div><div class="weather-details"><div class="weather-detail weather-humidity"><svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/></svg>--%</div><div class="weather-detail weather-wind"><svg viewBox="0 0 24 24"><path d="M12.5 4.5a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-8v2h8a4 4 0 0 0 0-8h-8v2h8z"/></svg>-- km/h</div><div class="weather-detail weather-high"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>H: --°</div><div class="weather-detail weather-low"><svg viewBox="0 0 24 24"><path d="M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z"/></svg>L: --°</div></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);updateWeatherWidget(widget);}},
+            todo:{title:'待办事项',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>',content:`<div class="todo-input-wrapper"><input type="text" class="todo-input" placeholder="添加新任务..."><button class="todo-add-btn">添加</button></div><div class="todo-list"></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);const input=widget.querySelector('.todo-input');const addBtn=widget.querySelector('.todo-add-btn');const list=widget.querySelector('.todo-list');let localTodos=[];function render(){list.innerHTML=localTodos.map(t=>`<div class="todo-item" data-todo-id="${t.id}"><div class="todo-checkbox ${t.completed?'checked':''}"></div><div class="todo-text ${t.completed?'completed':''}">${t.text}</div><div class="todo-delete">×</div></div>`).join('');list.querySelectorAll('.todo-checkbox').forEach((btn,idx)=>{btn.addEventListener('click',()=>{localTodos[idx].completed=!localTodos[idx].completed;render();});});list.querySelectorAll('.todo-delete').forEach((btn,idx)=>{btn.addEventListener('click',()=>{localTodos.splice(idx,1);render();});});}function addTodo(){const text=input.value.trim();if(text){localTodos.push({id:Date.now(),text:text,completed:false});input.value='';render();}}addBtn.addEventListener('click',addTodo);input.addEventListener('keypress',e=>{if(e.key==='Enter')addTodo();});render();}},
+            system:{title:'系统信息',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2H0c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2h-4z"/></svg>',content:`<div class="system-info-grid"><div class="system-info-item"><div class="system-info-label">CPU 核心</div><div class="system-info-value sys-cpu">--</div></div><div class="system-info-item"><div class="system-info-label">内存</div><div class="system-info-value sys-memory">--</div></div><div class="system-info-item"><div class="system-info-label">屏幕</div><div class="system-info-value sys-screen">--</div></div><div class="system-info-item"><div class="system-info-label">电池</div><div class="system-info-value sys-battery">--</div><div class="battery-level"><div class="battery-fill sys-battery-fill" style="width:0%"></div></div></div></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);widget.querySelector('.sys-cpu').textContent=navigator.hardwareConcurrency||'--';const memEl=widget.querySelector('.sys-memory');if(navigator.deviceMemory){memEl.textContent=navigator.deviceMemory+' GB';}else if(window.performance&&window.performance.memory){const used=Math.round(window.performance.memory.usedJSHeapSize/(1024*1024*1024)*100)/100;const total=Math.round(window.performance.memory.totalJSHeapSize/(1024*1024*1024)*100)/100;if(total>0){memEl.textContent=used+'/'+total+' GB';}else{memEl.textContent='JS: '+used+' GB';}}else{memEl.textContent='未知';}widget.querySelector('.sys-screen').textContent=`${window.screen.width}×${window.screen.height}`;if('getBattery'in navigator){navigator.getBattery().then(battery=>{function updateBattery(){const level=Math.round(battery.level*100);widget.querySelector('.sys-battery').textContent=level+'%';widget.querySelector('.sys-battery-fill').style.width=level+'%';}updateBattery();battery.addEventListener('levelchange',updateBattery);});}}},
+            worldclock:{title:'世界时钟',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2z"/></svg>',content:`<div class="world-clock-grid"><div class="world-clock-item"><div class="world-clock-city">纽约</div><div class="world-clock-time" data-tz="America/New_York">--:--</div><div class="world-clock-date" data-tz="America/New_York">--</div></div><div class="world-clock-item"><div class="world-clock-city">伦敦</div><div class="world-clock-time" data-tz="Europe/London">--:--</div><div class="world-clock-date" data-tz="Europe/London">--</div></div><div class="world-clock-item"><div class="world-clock-city">东京</div><div class="world-clock-time" data-tz="Asia/Tokyo">--:--</div><div class="world-clock-date" data-tz="Asia/Tokyo">--</div></div><div class="world-clock-item"><div class="world-clock-city">悉尼</div><div class="world-clock-time" data-tz="Australia/Sydney">--:--</div><div class="world-clock-date" data-tz="Australia/Sydney">--</div></div></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);updateWorldClocks(widget);}},
+            calendar:{title:'日历',icon:'<svg class="widget-icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>',content:`<div class="calendar-header"><div class="calendar-month-year">2024年1月</div><div class="calendar-nav"><button class="calendar-nav-btn cal-prev">‹</button><button class="calendar-nav-btn cal-next">›</button></div></div><div class="calendar-grid cal-grid"></div>`,init:(widgetId)=>{const widget=document.querySelector(`[data-widget-id="${widgetId}"]`);let currentDate=new Date();function renderCalendar(){const year=currentDate.getFullYear(),month=currentDate.getMonth();widget.querySelector('.calendar-month-year').textContent=`${year}年${month+1}月`;const firstDay=new Date(year,month,1).getDay(),daysInMonth=new Date(year,month+1,0).getDate(),daysInPrevMonth=new Date(year,month,0).getDate();let html=['日','一','二','三','四','五','六'].map(d=>`<div class="calendar-day-header">${d}</div>`).join('');for(let i=firstDay-1;i>=0;i--)html+=`<div class="calendar-day other-month">${daysInPrevMonth-i}</div>`;const today=new Date();for(let i=1;i<=daysInMonth;i++){const isToday=today.getDate()===i&&today.getMonth()===month&&today.getFullYear()===year;html+=`<div class="calendar-day ${isToday?'today':''}">${i}</div>`;}for(let i=1;i<=42-(firstDay+daysInMonth);i++)html+=`<div class="calendar-day other-month">${i}</div>`;widget.querySelector('.cal-grid').innerHTML=html;}widget.querySelector('.cal-prev').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();});widget.querySelector('.cal-next').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();});renderCalendar();}}
+        };
+
+        async function updateWeatherWidget(targetWidget){try{const e=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(settings.weatherLocation)}&count=1&language=zh&format=json`);const t=await e.json();if(!t.results||t.results.length===0)return;const{latitude:a,longitude:o,name:l,country:r}=t.results[0];const i=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${a}&longitude=${o}&current_weather=true&hourly=relativehumidity_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min&timezone=auto`);const c=await i.json(),s={location:`${l},${r}`,temperature:Math.round(c.current_weather.temperature),weatherCode:c.current_weather.weathercode,windSpeed:c.current_weather.windspeed,humidity:c.hourly.relativehumidity_2m[new Date().getHours()],precipitation:c.hourly.precipitation_probability[new Date().getHours()],maxTemp:Math.round(c.daily.temperature_2m_max[0]),minTemp:Math.round(c.daily.temperature_2m_min[0])};const u={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌦️',81:'🌧️',82:'🌧️',95:'⛈️',96:'⛈️',99:'⛈️'};const d={0:'晴朗',1:'多云',2:'多云',3:'阴天',45:'雾',48:'雾',51:'小雨',53:'中雨',55:'大雨',61:'小雨',63:'中雨',65:'大雨',71:'小雪',73:'中雪',75:'大雪',80:'阵雨',81:'大雨',82:'暴雨',95:'雷雨',96:'雷雹',99:'强雷雹'};const m=targetWidget||document.querySelector('[data-widget-type="weather"]');if(m){m.querySelector('.weather-temp').textContent=`${s.temperature}°`;m.querySelector('.weather-icon').textContent=u[s.weatherCode]||'☁️';m.querySelector('.weather-desc').textContent=d[s.weatherCode]||'多云';m.querySelector('.weather-location').innerHTML=`<svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>${s.location}`;m.querySelector('.weather-humidity').textContent=`${s.humidity}%`;m.querySelector('.weather-wind').textContent=`${s.windSpeed} km/h`;m.querySelector('.weather-high').textContent=`H: ${s.maxTemp}°`;m.querySelector('.weather-low').textContent=`L: ${s.minTemp}°`;}}catch(e){console.error('Weather error:',e);}}
+        function updateWorldClocks(targetWidget){const widgets=targetWidget?[targetWidget]:document.querySelectorAll('[data-widget-type="worldclock"]');widgets.forEach(widget=>{widget.querySelectorAll('[data-tz]').forEach(e=>{const t=e.dataset.tz,a=new Date(),o={timeZone:t,hour:'2-digit',minute:'2-digit',hour12:false},l={timeZone:t,month:'short',day:'numeric'};if(e.classList.contains('world-clock-time'))e.textContent=a.toLocaleTimeString('zh-CN',o);else if(e.classList.contains('world-clock-date'))e.textContent=a.toLocaleDateString('zh-CN',l);});});}
+        function createWidget(type, widgetId = null) {
+            const id = widgetId || `widget-${Date.now()}-${Math.random().toString(36).substr(2,9)}`;
+            const template = widgetTemplates[type];
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.dataset.widgetType = type;
+            widget.dataset.widgetId = id;
+            widget.draggable = true;
+            widget.innerHTML = `
+                <div class="widget-header">
+                    <div class="widget-title">${template.icon}${template.title}</div>
+                    <button class="widget-close">×</button>
+                </div>
+                <div class="widget-content">${template.content}</div>
+            `;
+            
+            widget.querySelector('.widget-close').addEventListener('click', (e) => {
+                e.stopPropagation();
+                widget.remove();
+                activeWidgets = activeWidgets.filter(w => w.id !== id);
+                console.log(`🗑️ [删除组件] ID: ${id}, 类型: ${widget.dataset.widgetType}`);
+                saveWidgetsToDB();
+            });
+            
+            widget.addEventListener('dragstart', (e) => {
+                widget.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', id);
+                lastInsertPosition = null; // 重置位置追踪
+                console.log(`🚀 [拖拽开始] 拖拽组件: ${widget.dataset.widgetType} (id: ${id})`);
+            });
+            
+            widget.addEventListener('dragend', () => {
+                widget.classList.remove('dragging');
+                document.querySelectorAll('.widget').forEach(w => w.classList.remove('drag-over'));
+                lastInsertPosition = null; // 重置位置追踪
+            });
+            
+            widget.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+            
+            widget.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                if (!widget.classList.contains('dragging')) {
+                    widget.classList.add('drag-over');
+                }
+            });
+            
+            widget.addEventListener('dragleave', () => {
+                widget.classList.remove('drag-over');
+            });
+            
+            widgetsContainer.appendChild(widget);
+            
+            // 立即初始化
+            try {
+                template.init(id);
+            } catch(err) {
+                console.error('Error initializing widget:', id, err);
+            }
+            
+            return id;
+        }
+        
+        const widgetsContainer = document.getElementById('widgets-container');
+        
+        // 拖拽状态追踪
+        let lastInsertPosition = null;
+        
+        // 拖拽排序核心逻辑
+        widgetsContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const draggedWidget = document.querySelector('.widget.dragging');
+            if (!draggedWidget) return;
+            
+            const result = getDragAfterElement(widgetsContainer, e.clientX, e.clientY);
+            
+            if (result == null || result.element == null) {
+                // 没有目标组件，移动到末尾
+                const lastWidget = widgetsContainer.lastElementChild;
+                if (lastWidget && lastWidget !== draggedWidget) {
+                    widgetsContainer.appendChild(draggedWidget);
+                    lastInsertPosition = 'end';
+                }
+            } else {
+                // 根据鼠标相对于组件中心的位置决定插入位置
+                const box = result.element.getBoundingClientRect();
+                const centerX = box.left + box.width / 2;
+                const centerY = box.top + box.height / 2;
+                
+                // 判断鼠标主要是在左侧/上侧还是右侧/下侧
+                const isLeft = e.clientX < centerX;
+                const isAbove = e.clientY < centerY;
+                
+                // 优先考虑 Y 轴（上下位置），然后是 X 轴（左右位置）
+                const isBefore = isAbove || (!isAbove && isLeft);
+                
+                let targetElement = result.element;
+                let insertPosition = 'after';
+                
+                if (isBefore) {
+                    // 插入到目标之前
+                    insertPosition = 'before';
+                } else {
+                    // 插入到目标之后
+                    const nextSibling = result.element.nextSibling;
+                    if (nextSibling) {
+                        targetElement = nextSibling;
+                    } else {
+                        insertPosition = 'end';
+                    }
+                }
+                
+                // 生成位置标识符，用于检测是否真的改变了位置
+                const positionId = insertPosition === 'end' ? 'end' : 
+                                   (insertPosition === 'before' ? 
+                                    `before_${targetElement.dataset.widgetId}` : 
+                                    `after_${targetElement.dataset.widgetId}`);
+                
+                // 只有位置真正改变时才移动DOM
+                if (lastInsertPosition !== positionId) {
+                    if (insertPosition === 'end') {
+                        widgetsContainer.appendChild(draggedWidget);
+                    } else {
+                        widgetsContainer.insertBefore(draggedWidget, targetElement);
+                    }
+                    lastInsertPosition = positionId;
+                }
+            }
+        });
+        
+        // 获取拖拽后应该插入到哪个元素之前
+        function getDragAfterElement(container, x, y) {
+            // 获取所有非拖拽中的小组件
+            const draggableElements = [...container.querySelectorAll('.widget:not(.dragging)')];
+            
+            if (draggableElements.length === 0) return null;
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                // 计算组件中心点
+                const centerX = box.left + box.width / 2;
+                const centerY = box.top + box.height / 2;
+                
+                // 计算鼠标与组件中心的距离（平方，避免开根号提高性能）
+                const distance = Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2);
+                
+                // 找到距离鼠标最近的组件
+                if (distance < closest.distance) {
+                    return { distance: distance, element: child };
+                } else {
+                    return closest;
+                }
+            }, { distance: Number.POSITIVE_INFINITY, element: null });
+        }
+        
+        widgetsContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('✅ [拖拽完成] Drop 事件触发');
+            
+            // 记录当前的 DOM 顺序
+            const currentOrder = Array.from(widgetsContainer.querySelectorAll('.widget')).map((w, index) => ({
+                id: w.dataset.widgetId,
+                type: w.dataset.widgetType,
+                position: index
+            }));
+            console.log('📋 [拖拽完成] 当前 DOM 顺序:', currentOrder.map(w => `[${w.position}]${w.type}`).join(' → '));
+            
+            // 保存到数据库
+            saveWidgetsToDB();
+        });
+        
+        async function saveWidgetsToDB() {
+            try {
+                await dbClear(STORE_WIDGETS);
+                const widgets = [];
+                const domWidgets = document.querySelectorAll('.widget');
+                
+                domWidgets.forEach((w, index) => {
+                    const widgetData = { 
+                        id: w.dataset.widgetId, 
+                        type: w.dataset.widgetType,
+                        position: index // 保存位置信息
+                    };
+                    widgets.push(widgetData);
+                });
+                
+                console.log(`📝 [保存] 保存 ${widgets.length} 个组件，顺序:`, widgets.map(w => `[${w.position}]${w.type}`).join(' → '));
+                
+                // 按顺序保存，确保数据库中的顺序与DOM一致
+                for(const widget of widgets) {
+                    await dbPut(STORE_WIDGETS, widget);
+                }
+                
+                activeWidgets = [...widgets];
+                
+                // 验证保存的数据 - 需要排序后再比较
+                const verify = await dbGetAll(STORE_WIDGETS);
+                verify.sort((a, b) => {
+                    if (a.position !== undefined && b.position !== undefined) {
+                        return a.position - b.position;
+                    }
+                    return a.id.localeCompare(b.id);
+                });
+                
+                const verifyOrder = verify.map(w => w.type);
+                const expectedOrder = widgets.map(w => w.type);
+                const isCorrect = JSON.stringify(verifyOrder) === JSON.stringify(expectedOrder);
+                
+                console.log('✅ [验证] 数据库保存' + (isCorrect ? '成功' : '失败'));
+                console.log('   数据库顺序:', verifyOrder.join(' → '));
+                console.log('   期望顺序:', expectedOrder.join(' → '));
+            } catch(err) {
+                console.error('❌ [错误] 保存失败:', err);
+            }
+        }
+        
+        const timeText=document.getElementById('time-text'),secondsEl=document.getElementById('seconds'),ampmEl=document.getElementById('ampm'),dateDisplay=document.getElementById('date-display'),bgLayer=document.getElementById('bg-layer'),root=document.documentElement;
+
+        function updateTime(){const now=new Date();let hours=now.getHours();const minutes=now.getMinutes(),seconds=now.getSeconds();let ampm='';if(12===settings.timeFormat&&(ampm=hours>=12?'PM':'AM',hours=hours%12||12),timeText.textContent=`${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}`,settings.showSeconds?(secondsEl.textContent=seconds.toString().padStart(2,'0'),secondsEl.style.display='inline'):secondsEl.style.display='none',ampmEl.textContent=ampm,settings.showDate){const days=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'],months=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];dateDisplay.textContent=`${days[now.getDay()]}, ${months[now.getMonth()]}${now.getDate()}日, ${now.getFullYear()}`;dateDisplay.style.display='block';}else dateDisplay.style.display='none';updateWorldClocks();}
+        setInterval(updateTime,1000);
+
+        const settingsBtn=document.getElementById('settings-btn'),closeBtn=document.getElementById('close-btn'),settingsPanel=document.getElementById('settings-panel'),settingsOverlay=document.getElementById('settings-overlay'),addWidgetBtn=document.getElementById('add-widget-btn');
+        function openSettings(){settingsPanel.classList.add('active');settingsOverlay.classList.add('active');}
+        function closeSettings(){settingsPanel.classList.remove('active');settingsOverlay.classList.remove('active');}
+        settingsBtn.addEventListener('click',openSettings);closeBtn.addEventListener('click',closeSettings);settingsOverlay.addEventListener('click',closeSettings);
+
+        const colorOptions=document.querySelectorAll('.color-option'),customColorInput=document.getElementById('custom-color');
+        function setPrimaryColor(e){settings.primaryColor=e;root.style.setProperty('--primary-color',e);const t=hexToRgb(e);root.style.setProperty('--primary-color-rgb',`${t.r},${t.g},${t.b}`);colorOptions.forEach(t=>{t.classList.remove('active');t.dataset.color===e&&t.classList.add('active');});customColorInput.value=e;dbPut(STORE_SETTINGS,{key:'settings',value:settings});bgLayer.style.backgroundImage&&bgLayer.style.backgroundImage.startsWith('url(img/')&&(bgLayer.style.backgroundImage=`url(${bgLayer.style.backgroundImage.slice(4,-1)})`);}
+        colorOptions.forEach(e=>e.addEventListener('click',()=>setPrimaryColor(e.dataset.color)));customColorInput.addEventListener('input',e=>setPrimaryColor(e.target.value));
+
+        const fontOptions=document.querySelectorAll('.font-option');
+        function setFont(e,t){settings.fontFamily=e;settings.fontType=t;let a;if('mono'===t)a=`'${e}', monospace`;'serif'===t?a=`'${e}', serif`:a=`'${e}', -apple-system, BlinkMacSystemFont, sans-serif`;root.style.setProperty('--font-family',a);fontOptions.forEach(e=>{e.classList.remove('active');e.dataset.font===a.dataset.font&&e.dataset.type===t&&e.classList.add('active');});dbPut(STORE_SETTINGS,{key:'settings',value:settings});}fontOptions.forEach(e=>e.addEventListener('click',()=>setFont(e.dataset.font,e.dataset.type)));
+
+        const fontSizeSlider=document.getElementById('font-size-slider'),fontSizeValue=document.getElementById('font-size-value');
+        fontSizeSlider.addEventListener('input',e=>{const t=e.target.value;settings.fontSize=t;root.style.setProperty('--font-size',`${t}px`);fontSizeValue.textContent=`${t}px`;});fontSizeSlider.addEventListener('change',()=>dbPut(STORE_SETTINGS,{key:'settings',value:settings}));
+
+        const fontWeightSlider=document.getElementById('font-weight-slider'),fontWeightValue=document.getElementById('font-weight-value'),weights=[300,400,600,700],weightLabels=['Light','Regular','Bold','Heavy'];
+        fontWeightSlider.addEventListener('input',e=>{const t=weights[e.target.value-1];settings.fontWeight=t;root.style.setProperty('--font-weight',t);fontWeightValue.textContent=weightLabels[e.target.value-1];});fontWeightSlider.addEventListener('change',()=>dbPut(STORE_SETTINGS,{key:'settings',value:settings}));
+
+        const timeFormatToggle=document.getElementById('time-format-toggle'),showDateToggle=document.getElementById('show-date-toggle'),showSecondsToggle=document.getElementById('show-seconds-toggle');
+        function setupToggle(e,t){e.addEventListener('click',()=>{e.classList.toggle('active');settings[t]=e.classList.contains('active');dbPut(STORE_SETTINGS,{key:'settings',value:settings});updateTime();});}
+        setupToggle(timeFormatToggle,'timeFormat');setupToggle(showDateToggle,'showDate');setupToggle(showSecondsToggle,'showSeconds');
+
+        const uploadArea=document.getElementById('upload-area'),fileInput=document.getElementById('file-input'),imageGallery=document.getElementById('image-gallery');
+        uploadArea.addEventListener('click',()=>fileInput.click());uploadArea.addEventListener('dragover',e=>{e.preventDefault();uploadArea.classList.add('dragover');});uploadArea.addEventListener('dragleave',()=>uploadArea.classList.remove('dragover'));uploadArea.addEventListener('drop',e=>{e.preventDefault();uploadArea.classList.remove('dragover');handleFiles(e.dataTransfer.files);});fileInput.addEventListener('change',e=>handleFiles(e.target.files));
+        function handleFiles(e){Array.from(e).forEach(e=>{if(e.type.startsWith('image/')){const t=new FileReader();t.onload=a=>{addBackgroundImage(a.target.result);};t.readAsDataURL(e);}});}
+        function addBackgroundImage(e){const t={id:Date.now().toString(),src:e};dbPut(STORE_IMAGES,t).then(()=>{renderGallery();settings.currentBackground||setBackgroundImage(t.id);});}
+        function setBackgroundImage(e){settings.currentBackground=e;dbGet(STORE_IMAGES,e).then(t=>{t&&(bgLayer.style.backgroundImage=`url(${t.src})`);});dbPut(STORE_SETTINGS,{key:'settings',value:settings});renderGallery();}
+        function removeBackgroundImage(e){dbDelete(STORE_IMAGES,e).then(()=>{settings.currentBackground===e&&(settings.currentBackground=null,bgLayer.style.backgroundImage='');dbPut(STORE_SETTINGS,{key:'settings',value:settings});renderGallery();});}
+        function renderGallery(){dbGetAll(STORE_IMAGES).then(e=>{imageGallery.innerHTML='';e.forEach(e=>{const t=document.createElement('div');t.className=`gallery-item ${settings.currentBackground===e.id?'active':''}`;t.innerHTML=`<img src="${e.src}" alt="Background"><div class="remove-btn" data-id="${e.id}">×</div>`;t.addEventListener('click',a=>{a.target.classList.contains('remove-btn')||setBackgroundImage(e.id);});const a=t.querySelector('.remove-btn');a.addEventListener('click',a=>{a.stopPropagation();removeBackgroundImage(e.id);});imageGallery.appendChild(t);});});}
+
+        document.getElementById('reset-btn').addEventListener('click',()=>{settings={...defaultSettings};bgLayer.style.backgroundImage='';applySettings();dbPut(STORE_SETTINGS,{key:'settings',value:settings});});
+
+        document.getElementById('location-btn').addEventListener('click',()=>{const e=document.getElementById('location-input').value.trim();e&&(settings.weatherLocation=e,dbPut(STORE_SETTINGS,{key:'settings',value:settings}),updateWeatherWidget());});
+
+        addWidgetBtn.addEventListener('click',openSettings);
+        document.querySelectorAll('.widget-option').forEach(e=>e.addEventListener('click',()=>{const type=e.dataset.widget;const id=createWidget(type);activeWidgets.push({id:id,type:type});console.log(`➕ [添加组件] 类型: ${type}, ID: ${id}`);saveWidgetsToDB().then(()=>{console.log('✅ [添加完成] 已保存到数据库');});settingsPanel.classList.remove('active');settingsOverlay.classList.remove('active');}));
+
+        document.getElementById('fullscreen-btn').addEventListener('click',()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();});
+        document.addEventListener('fullscreenchange',()=>{const e=document.getElementById('fullscreen-icon');e.innerHTML=document.fullscreenElement?'<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>':'<path d="M5 5h5v2H7v3H5V5zm9 0h5v5h-2V7h-3V5zm0 9h5v5h-2v-3h-3v-2zm-9 0h2v3h3v2H5v-5z"/>';});
+
+        document.addEventListener('keydown',e=>{if('Escape'===e.key)closeSettings();if(('f'===e.key||'F'===e.key)&&!document.fullscreenElement)document.documentElement.requestFullscreen();});
+
+        function applySettings(){setPrimaryColor(settings.primaryColor);let e;e='mono'===settings.fontType?`'${settings.fontFamily}', monospace`:'serif'===settings.fontType?`'${settings.fontFamily}', serif`:`'${settings.fontFamily}', -apple-system, BlinkMacSystemFont, sans-serif`;root.style.setProperty('--font-family',e);fontOptions.forEach(e=>{e.classList.remove('active');e.dataset.font===settings.fontFamily&&e.dataset.type===settings.fontType&&e.classList.add('active');});root.style.setProperty('--font-size',`${settings.fontSize}px`);fontSizeSlider.value=settings.fontSize;fontSizeValue.textContent=`${settings.fontSize}px`;root.style.setProperty('--font-weight',settings.fontWeight);const t=weights.indexOf(settings.fontWeight);fontWeightSlider.value=t+1;fontWeightValue.textContent=weightLabels[t];timeFormatToggle.classList.toggle('active',24===settings.timeFormat);showDateToggle.classList.toggle('active',settings.showDate);showSecondsToggle.classList.toggle('active',settings.showSeconds);document.getElementById('location-input').value=settings.weatherLocation;}
+        async function loadAll(){
+            try {
+                const images = await dbGetAll(STORE_IMAGES);
+                if(images&&images.length>0){
+                    const first=images[0];
+                    settings.currentBackground=first.id;
+                    bgLayer.style.backgroundImage=`url(${first.src})`;
+                }
+                renderGallery();
+                
+                const settingsData = await dbGet(STORE_SETTINGS,'settings');
+                if(settingsData){
+                    settings={...defaultSettings,...settingsData.value};
+                    applySettings();
+                }else{
+                    applySettings();
+                }
+                
+                const widgets = await dbGetAll(STORE_WIDGETS);
+                console.log('📂 [加载] 从数据库加载小组件:', widgets.map(w => w.type).join(' → ') || '无');
+                const container = document.getElementById('widgets-container');
+                container.innerHTML='';
+                activeWidgets=[];
+                
+                if(widgets && widgets.length > 0){
+                    // 尝试按position排序，如果没有position则按id排序
+                    widgets.sort((a, b) => {
+                        if (a.position !== undefined && b.position !== undefined) {
+                            return a.position - b.position;
+                        }
+                        return a.id.localeCompare(b.id);
+                    });
+                    
+                    console.log('📋 [排序后] 组件顺序:', widgets.map(w => `[${w.position}]${w.type}`).join(' → '));
+                    
+                    // 按顺序同步创建小组件，保持顺序
+                    for(let i = 0; i < widgets.length; i++){
+                        const w = widgets[i];
+                        console.log(`   创建组件 ${i+1}/${widgets.length}: ${w.type} (${w.id})`);
+                        createWidget(w.type, w.id);
+                        activeWidgets.push({id:w.id,type:w.type,position:w.position});
+                    }
+                    
+                    // 创建完成后，记录实际的 DOM 顺序
+                    setTimeout(() => {
+                        const domOrder = Array.from(container.querySelectorAll('.widget')).map((w, index) => ({
+                            id: w.dataset.widgetId,
+                            type: w.dataset.widgetType,
+                            position: index
+                        }));
+                        console.log('📋 [加载完成] 实际 DOM 顺序:', domOrder.map(w => `[${w.position}]${w.type}`).join(' → '));
+                        console.log('📋 [数据库] 存储顺序:', widgets.map(w => `[${w.position}]${w.type}`).join(' → '));
+                        
+                        // 验证顺序是否一致
+                        const domTypes = domOrder.map(w => w.type);
+                        const dbTypes = widgets.map(w => w.type);
+                        const orderMatch = JSON.stringify(domTypes) === JSON.stringify(dbTypes);
+                        
+                        if (orderMatch) {
+                            console.log('✅ [验证] 顺序正确');
+                        } else {
+                            console.log('⚠️ [警告] 顺序不匹配！');
+                            console.log('   实际:', domTypes.join(' → '));
+                            console.log('   期望:', dbTypes.join(' → '));
+                        }
+                    }, 500);
+                }
+                console.log('✅ [加载完成] 已加载小组件:', activeWidgets.map(w => w.type).join(' → ') || '无');
+            } catch(err) {
+                console.error('Error loading data:', err);
+            }
+        }
+
+        const defaultBg='img/s.png';bgLayer.style.backgroundImage=`url(${defaultBg})`;initDB().then(()=>{loadAll();updateTime();setInterval(updateWeatherWidget,30*60*1000);});
+    </script>
 </body>
 </html>
