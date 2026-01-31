@@ -1048,6 +1048,9 @@
             }
         }
         function updateWorldClocks(targetWidget){const widgets=targetWidget?[targetWidget]:document.querySelectorAll('[data-widget-type="worldclock"]');widgets.forEach(widget=>{widget.querySelectorAll('[data-tz]').forEach(e=>{const t=e.dataset.tz,a=new Date(),o={timeZone:t,hour:'2-digit',minute:'2-digit',hour12:false},l={timeZone:t,month:'short',day:'numeric'};if(e.classList.contains('world-clock-time'))e.textContent=a.toLocaleTimeString('zh-CN',o);else if(e.classList.contains('world-clock-date'))e.textContent=a.toLocaleDateString('zh-CN',l);});});}
+        
+        const widgetsContainer = document.getElementById('widgets-container');
+        
         function createWidget(type, widgetId = null, position = null) {
             const id = widgetId || `widget-${Date.now()}-${Math.random().toString(36).substr(2,9)}`;
             const template = widgetTemplates[type];
