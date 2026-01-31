@@ -1332,20 +1332,35 @@
         async function loadAll(){
             try {
                 const images = await dbGetAll(STORE_IMAGES);
-                if(images&&images.length>0){
-                    const first=images[0];
-                    settings.currentBackground=first.id;
-                    bgLayer.style.backgroundImage=`url(${first.src})`;
-                }
                 renderGallery();
                 
                 const settingsData = await dbGet(STORE_SETTINGS,'settings');
                 if(settingsData){
                     settings={...defaultSettings,...settingsData.value};
-                    applySettings();
                 }else{
-                    applySettings();
+                    settings={...defaultSettings};
                 }
+                
+                // 根据 currentBackground 加载背景图片
+                if(images&&images.length>0){
+                    if(settings.currentBackground){
+                        // 尝试找到用户之前选择的图片
+                        const selectedImage = images.find(img => img.id === settings.currentBackground);
+                        if(selectedImage){
+                            bgLayer.style.backgroundImage=`url(${selectedImage.src})`;
+                        }else{
+                            // 如果找不到，使用第一张图片
+                            bgLayer.style.backgroundImage=`url(${images[0].src})`;
+                            settings.currentBackground=images[0].id;
+                        }
+                    }else{
+                        // 没有设置过背景，使用第一张图片
+                        bgLayer.style.backgroundImage=`url(${images[0].src})`;
+                        settings.currentBackground=images[0].id;
+                    }
+                }
+                
+                applySettings();
                 
                 const widgets = await dbGetAll(STORE_WIDGETS);
                 console.log('📂 [加载] 从数据库加载小组件:', widgets.map(w => w.type).join(' → ') || '无');
