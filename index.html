@@ -141,11 +141,17 @@
         }
 
         .widgets-container {
-            display: flex; flex-wrap: wrap; justify-content: center;
-            gap: 20px; max-width: 1400px; width: 100%; padding: 0 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
         }
 
         .widget {
+            position: absolute;
             background: var(--glass-bg);
             backdrop-filter: blur(30px) saturate(160%);
             -webkit-backdrop-filter: blur(30px) saturate(160%);
@@ -154,13 +160,30 @@
             box-shadow: 0 4px 20px 0 var(--glass-shadow),
                         inset 0 1px 0 rgba(255, 255, 255, 0.3);
             padding: 24px; min-width: 280px; max-width: 380px;
-            position: relative; overflow: hidden;
-            transition: all var(--transition-speed) ease; cursor: move;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: move;
+            pointer-events: auto;
         }
 
-        .widget:hover { transform: translateY(-4px); }
-        .widget.dragging { opacity: 0.7; transform: scale(1.05) rotate(2deg); z-index: 1000; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-        .widget.drag-over { border: 2px dashed var(--primary-color); transform: scale(1.02); background: rgba(var(--primary-color-rgb),0.1); }
+        .widget.dragging {
+            opacity: 0.8;
+            transform: scale(1.05) rotate(2deg);
+            z-index: 1000;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            cursor: grabbing;
+        }
+
+        .widget.drag-over {
+            border: 2px dashed var(--primary-color);
+            transform: scale(1.02);
+            background: rgba(var(--primary-color-rgb),0.1);
+        }
+
+        .widget:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px 0 var(--glass-shadow),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
 
         .widget-header {
             display: flex; align-items: center; justify-content: space-between;
@@ -187,6 +210,18 @@
         .widget:hover .widget-close { opacity: 1; }
         .widget-close:hover { background: rgba(255,255,255,0.2); }
         .widget-content { color: #fff; }
+
+        .widget-position {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            font-size: 10px;
+            opacity: 0.4;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: grab;
+        }
+
+        .widget-position:active { cursor: grabbing; }
 
         .weather-main { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
         .weather-temp { font-size: 48px; font-weight: 300; line-height: 1; }
@@ -740,6 +775,15 @@
         </div>
 
         <div class="settings-section">
+            <h3 class="section-title">小组件布局</h3>
+            <div class="toggle-wrapper">
+                <span class="toggle-label">全屏自由拖动</span>
+                <div class="toggle active" id="free-drag-toggle"><div class="toggle-knob"></div></div>
+            </div>
+            <button class="reset-btn" id="reset-widget-positions-btn" style="margin-top: 15px;">重置所有组件位置</button>
+        </div>
+
+        <div class="settings-section">
             <h3 class="section-title">背景图片</h3>
             <div class="image-upload-area" id="upload-area"><svg class="upload-icon" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg><div class="upload-text">点击或拖拽上传图片</div><div class="upload-hint">支持 JPG, PNG, WEBP 格式</div></div>
             <input type="file" id="file-input" accept="image/*" multiple>
@@ -906,7 +950,11 @@
             ...settings,
             weatherExtended: false,
             weatherIndices: false,
-            weatherForecast: false
+            weatherForecast: false,
+            showLunarCalendar: true,
+            showHolidays: true,
+            customHolidays: {},
+            freeDragMode: true
         };
 
         const widgetTemplates = {
@@ -1000,20 +1048,21 @@
             }
         }
         function updateWorldClocks(targetWidget){const widgets=targetWidget?[targetWidget]:document.querySelectorAll('[data-widget-type="worldclock"]');widgets.forEach(widget=>{widget.querySelectorAll('[data-tz]').forEach(e=>{const t=e.dataset.tz,a=new Date(),o={timeZone:t,hour:'2-digit',minute:'2-digit',hour12:false},l={timeZone:t,month:'short',day:'numeric'};if(e.classList.contains('world-clock-time'))e.textContent=a.toLocaleTimeString('zh-CN',o);else if(e.classList.contains('world-clock-date'))e.textContent=a.toLocaleDateString('zh-CN',l);});});}
-        function createWidget(type, widgetId = null) {
+        function createWidget(type, widgetId = null, position = null) {
             const id = widgetId || `widget-${Date.now()}-${Math.random().toString(36).substr(2,9)}`;
             const template = widgetTemplates[type];
             const widget = document.createElement('div');
             widget.className = 'widget';
             widget.dataset.widgetType = type;
             widget.dataset.widgetId = id;
-            widget.draggable = true;
+            
             widget.innerHTML = `
                 <div class="widget-header">
                     <div class="widget-title">${template.icon}${template.title}</div>
                     <button class="widget-close">×</button>
                 </div>
                 <div class="widget-content">${template.content}</div>
+                <div class="widget-position" data-widget-id="${id}"></div>
             `;
             
             widget.querySelector('.widget-close').addEventListener('click', (e) => {
@@ -1024,39 +1073,22 @@
                 saveWidgetsToDB();
             });
             
-            widget.addEventListener('dragstart', (e) => {
-                widget.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', id);
-                lastInsertPosition = null; // 重置位置追踪
-                console.log(`🚀 [拖拽开始] 拖拽组件: ${widget.dataset.widgetType} (id: ${id})`);
-            });
-            
-            widget.addEventListener('dragend', () => {
-                widget.classList.remove('dragging');
-                document.querySelectorAll('.widget').forEach(w => w.classList.remove('drag-over'));
-                lastInsertPosition = null; // 重置位置追踪
-            });
-            
-            widget.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            });
-            
-            widget.addEventListener('dragenter', (e) => {
-                e.preventDefault();
-                if (!widget.classList.contains('dragging')) {
-                    widget.classList.add('drag-over');
-                }
-            });
-            
-            widget.addEventListener('dragleave', () => {
-                widget.classList.remove('drag-over');
-            });
+            setupWidgetDrag(widget, id);
             
             widgetsContainer.appendChild(widget);
             
-            // 立即初始化
+            if (position) {
+                widget.style.left = position.x + 'px';
+                widget.style.top = position.y + 'px';
+            } else {
+                const containerRect = widgetsContainer.getBoundingClientRect();
+                const randomOffset = Math.random() * 100;
+                widget.style.left = (containerRect.width / 2 - 160 + randomOffset) + 'px';
+                widget.style.top = (200 + randomOffset) + 'px';
+            }
+            
+            updateWidgetPositionIndicator(widget);
+            
             try {
                 template.init(id);
             } catch(err) {
@@ -1065,159 +1097,108 @@
             
             return id;
         }
-        
-        const widgetsContainer = document.getElementById('widgets-container');
-        
-        // 拖拽状态追踪
-        let lastInsertPosition = null;
-        
-        // 拖拽排序核心逻辑
-        widgetsContainer.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+
+        function setupWidgetDrag(widget, id) {
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+            let currentX, currentY;
             
-            const draggedWidget = document.querySelector('.widget.dragging');
-            if (!draggedWidget) return;
+            const positionEl = widget.querySelector('.widget-position');
             
-            const result = getDragAfterElement(widgetsContainer, e.clientX, e.clientY);
-            
-            if (result == null || result.element == null) {
-                // 没有目标组件，移动到末尾
-                const lastWidget = widgetsContainer.lastElementChild;
-                if (lastWidget && lastWidget !== draggedWidget) {
-                    widgetsContainer.appendChild(draggedWidget);
-                    lastInsertPosition = 'end';
-                }
-            } else {
-                // 根据鼠标相对于组件中心的位置决定插入位置
-                const box = result.element.getBoundingClientRect();
-                const centerX = box.left + box.width / 2;
-                const centerY = box.top + box.height / 2;
-                
-                // 判断鼠标主要是在左侧/上侧还是右侧/下侧
-                const isLeft = e.clientX < centerX;
-                const isAbove = e.clientY < centerY;
-                
-                // 优先考虑 Y 轴（上下位置），然后是 X 轴（左右位置）
-                const isBefore = isAbove || (!isAbove && isLeft);
-                
-                let targetElement = result.element;
-                let insertPosition = 'after';
-                
-                if (isBefore) {
-                    // 插入到目标之前
-                    insertPosition = 'before';
-                } else {
-                    // 插入到目标之后
-                    const nextSibling = result.element.nextSibling;
-                    if (nextSibling) {
-                        targetElement = nextSibling;
-                    } else {
-                        insertPosition = 'end';
-                    }
+            const onMouseDown = (e) => {
+                if (e.target.closest('.widget-close') || e.target.closest('button') || e.target.closest('input') || e.target.closest('.todo-checkbox') || e.target.closest('.todo-delete')) {
+                    return;
                 }
                 
-                // 生成位置标识符，用于检测是否真的改变了位置
-                const positionId = insertPosition === 'end' ? 'end' : 
-                                   (insertPosition === 'before' ? 
-                                    `before_${targetElement.dataset.widgetId}` : 
-                                    `after_${targetElement.dataset.widgetId}`);
+                isDragging = true;
+                widget.classList.add('dragging');
                 
-                // 只有位置真正改变时才移动DOM
-                if (lastInsertPosition !== positionId) {
-                    if (insertPosition === 'end') {
-                        widgetsContainer.appendChild(draggedWidget);
-                    } else {
-                        widgetsContainer.insertBefore(draggedWidget, targetElement);
-                    }
-                    lastInsertPosition = positionId;
-                }
-            }
-        });
-        
-        // 获取拖拽后应该插入到哪个元素之前
-        function getDragAfterElement(container, x, y) {
-            // 获取所有非拖拽中的小组件
-            const draggableElements = [...container.querySelectorAll('.widget:not(.dragging)')];
+                startX = e.clientX || e.touches[0].clientX;
+                startY = e.clientY || e.touches[0].clientY;
+                
+                initialX = widget.offsetLeft;
+                initialY = widget.offsetTop;
+                
+                e.preventDefault();
+            };
             
-            if (draggableElements.length === 0) return null;
+            const onMouseMove = (e) => {
+                if (!isDragging) return;
+                
+                const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+                const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+                
+                const deltaX = clientX - startX;
+                const deltaY = clientY - startY;
+                
+                const containerRect = widgetsContainer.getBoundingClientRect();
+                let newX = initialX + deltaX;
+                let newY = initialY + deltaY;
+                
+                newX = Math.max(0, Math.min(newX, containerRect.width - widget.offsetWidth));
+                newY = Math.max(0, Math.min(newY, containerRect.height - widget.offsetHeight));
+                
+                widget.style.left = newX + 'px';
+                widget.style.top = newY + 'px';
+                
+                updateWidgetPositionIndicator(widget);
+            };
             
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                // 计算组件中心点
-                const centerX = box.left + box.width / 2;
-                const centerY = box.top + box.height / 2;
+            const onMouseUp = () => {
+                if (!isDragging) return;
                 
-                // 计算鼠标与组件中心的距离（平方，避免开根号提高性能）
-                const distance = Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2);
+                isDragging = false;
+                widget.classList.remove('dragging');
                 
-                // 找到距离鼠标最近的组件
-                if (distance < closest.distance) {
-                    return { distance: distance, element: child };
-                } else {
-                    return closest;
-                }
-            }, { distance: Number.POSITIVE_INFINITY, element: null });
+                currentX = widget.offsetLeft;
+                currentY = widget.offsetTop;
+                
+                saveWidgetsToDB();
+            };
+            
+            widget.addEventListener('mousedown', onMouseDown);
+            widget.addEventListener('touchstart', onMouseDown, { passive: false });
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('touchmove', onMouseMove, { passive: false });
+            
+            document.addEventListener('mouseup', onMouseUp);
+            document.addEventListener('touchend', onMouseUp);
         }
-        
-        widgetsContainer.addEventListener('drop', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('✅ [拖拽完成] Drop 事件触发');
-            
-            // 记录当前的 DOM 顺序
-            const currentOrder = Array.from(widgetsContainer.querySelectorAll('.widget')).map((w, index) => ({
-                id: w.dataset.widgetId,
-                type: w.dataset.widgetType,
-                position: index
-            }));
-            console.log('📋 [拖拽完成] 当前 DOM 顺序:', currentOrder.map(w => `[${w.position}]${w.type}`).join(' → '));
-            
-            // 保存到数据库
-            saveWidgetsToDB();
-        });
-        
+
+        function updateWidgetPositionIndicator(widget) {
+            const positionEl = widget.querySelector('.widget-position');
+            if (positionEl) {
+                const x = Math.round(widget.offsetLeft);
+                const y = Math.round(widget.offsetTop);
+                positionEl.textContent = `${x}, ${y}`;
+            }
+        }
+
         async function saveWidgetsToDB() {
             try {
                 await dbClear(STORE_WIDGETS);
                 const widgets = [];
                 const domWidgets = document.querySelectorAll('.widget');
                 
-                domWidgets.forEach((w, index) => {
+                domWidgets.forEach((w) => {
                     const widgetData = { 
                         id: w.dataset.widgetId, 
                         type: w.dataset.widgetType,
-                        position: index // 保存位置信息
+                        x: w.offsetLeft,
+                        y: w.offsetTop
                     };
                     widgets.push(widgetData);
                 });
                 
-                console.log(`📝 [保存] 保存 ${widgets.length} 个组件，顺序:`, widgets.map(w => `[${w.position}]${w.type}`).join(' → '));
+                console.log(`📝 [保存] 保存 ${widgets.length} 个组件位置`);
                 
-                // 按顺序保存，确保数据库中的顺序与DOM一致
                 for(const widget of widgets) {
                     await dbPut(STORE_WIDGETS, widget);
                 }
                 
                 activeWidgets = [...widgets];
-                
-                // 验证保存的数据 - 需要排序后再比较
-                const verify = await dbGetAll(STORE_WIDGETS);
-                verify.sort((a, b) => {
-                    if (a.position !== undefined && b.position !== undefined) {
-                        return a.position - b.position;
-                    }
-                    return a.id.localeCompare(b.id);
-                });
-                
-                const verifyOrder = verify.map(w => w.type);
-                const expectedOrder = widgets.map(w => w.type);
-                const isCorrect = JSON.stringify(verifyOrder) === JSON.stringify(expectedOrder);
-                
-                console.log('✅ [验证] 数据库保存' + (isCorrect ? '成功' : '失败'));
-                console.log('   数据库顺序:', verifyOrder.join(' → '));
-                console.log('   期望顺序:', expectedOrder.join(' → '));
+                console.log('✅ [保存] 组件位置已保存');
             } catch(err) {
                 console.error('❌ [错误] 保存失败:', err);
             }
@@ -1328,7 +1309,45 @@
             if (extendedToggle) extendedToggle.classList.toggle('active', !!settings.weatherExtended);
             if (indicesToggle) indicesToggle.classList.toggle('active', !!settings.weatherIndices);
             if (forecastToggle) forecastToggle.classList.toggle('active', !!settings.weatherForecast);
+            
+            const freeDragToggle = document.getElementById('free-drag-toggle');
+            if (freeDragToggle) freeDragToggle.classList.toggle('active', settings.freeDragMode !== false);
         }
+        
+        document.getElementById('reset-widget-positions-btn').addEventListener('click', async () => {
+            if (!confirm('确定要重置所有小组件位置吗？')) return;
+            
+            const widgets = document.querySelectorAll('.widget');
+            const containerRect = widgetsContainer.getBoundingClientRect();
+            let index = 0;
+            
+            widgets.forEach((widget) => {
+                const col = index % 3;
+                const row = Math.floor(index / 3);
+                const x = 40 + col * 420;
+                const y = 200 + row * 320;
+                
+                widget.style.left = x + 'px';
+                widget.style.top = y + 'px';
+                updateWidgetPositionIndicator(widget);
+                index++;
+            });
+            
+            setTimeout(() => {
+                saveWidgetsToDB();
+                alert('✅ 组件位置已重置！');
+            }, 100);
+        });
+        
+        const freeDragToggle = document.getElementById('free-drag-toggle');
+        if (freeDragToggle) {
+            freeDragToggle.addEventListener('click', async () => {
+                freeDragToggle.classList.toggle('active');
+                settings.freeDragMode = freeDragToggle.classList.contains('active');
+                await dbPut(STORE_SETTINGS, { key: 'settings', value: settings });
+            });
+        }
+        
         async function loadAll(){
             try {
                 const images = await dbGetAll(STORE_IMAGES);
@@ -1369,27 +1388,21 @@
                 activeWidgets=[];
                 
                 if(widgets && widgets.length > 0){
-                    // 尝试按position排序，如果没有position则按id排序
-                    widgets.sort((a, b) => {
-                        if (a.position !== undefined && b.position !== undefined) {
-                            return a.position - b.position;
-                        }
-                        return a.id.localeCompare(b.id);
-                    });
-                    
-                    console.log('📋 [排序后] 组件顺序:', widgets.map(w => `[${w.position}]${w.type}`).join(' → '));
-                    
                     const hasWeatherWidget = widgets.some(w => w.type === 'weather');
+                    const hasCalendarWidget = widgets.some(w => w.type === 'calendar');
                     
-                    // 按顺序同步创建小组件，保持顺序
                     for(let i = 0; i < widgets.length; i++){
                         const w = widgets[i];
                         console.log(`   创建组件 ${i+1}/${widgets.length}: ${w.type} (${w.id})`);
-                        createWidget(w.type, w.id);
-                        activeWidgets.push({id:w.id,type:w.type,position:w.position});
+                        
+                        const position = (w.x !== undefined && w.y !== undefined) 
+                            ? { x: w.x, y: w.y } 
+                            : null;
+                        
+                        createWidget(w.type, w.id, position);
+                        activeWidgets.push({id:w.id,type:w.type,x:w.x,y:w.y});
                     }
                     
-                    // 如果有天气小组件，显示天气设置面板
                     if (hasWeatherWidget) {
                         const weatherSettingsSection = document.getElementById('weather-settings');
                         if (weatherSettingsSection) {
@@ -1397,29 +1410,16 @@
                         }
                     }
                     
-                    // 创建完成后，记录实际的 DOM 顺序
-                    setTimeout(() => {
-                        const domOrder = Array.from(container.querySelectorAll('.widget')).map((w, index) => ({
-                            id: w.dataset.widgetId,
-                            type: w.dataset.widgetType,
-                            position: index
-                        }));
-                        console.log('📋 [加载完成] 实际 DOM 顺序:', domOrder.map(w => `[${w.position}]${w.type}`).join(' → '));
-                        console.log('📋 [数据库] 存储顺序:', widgets.map(w => `[${w.position}]${w.type}`).join(' → '));
-                        
-                        // 验证顺序是否一致
-                        const domTypes = domOrder.map(w => w.type);
-                        const dbTypes = widgets.map(w => w.type);
-                        const orderMatch = JSON.stringify(domTypes) === JSON.stringify(dbTypes);
-                        
-                        if (orderMatch) {
-                            console.log('✅ [验证] 顺序正确');
-                        } else {
-                            console.log('⚠️ [警告] 顺序不匹配！');
-                            console.log('   实际:', domTypes.join(' → '));
-                            console.log('   期望:', dbTypes.join(' → '));
+                    if (hasCalendarWidget) {
+                        const calendarSettingsSection = document.getElementById('calendar-settings');
+                        if (calendarSettingsSection) {
+                            calendarSettingsSection.style.display = 'block';
                         }
-                    }, 500);
+                    }
+                    
+                    setTimeout(() => {
+                        console.log('✅ [加载完成] 已加载小组件');
+                    }, 100);
                 }
                 console.log('✅ [加载完成] 已加载小组件:', activeWidgets.map(w => w.type).join(' → ') || '无');
             } catch(err) {
