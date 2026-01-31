@@ -159,7 +159,7 @@
             border-radius: 20px;
             box-shadow: 0 4px 20px 0 var(--glass-shadow),
                         inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            padding: 24px; min-width: 280px; max-width: 380px;
+            padding: 24px; min-width: 200px; min-height: 150px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             cursor: move;
             pointer-events: auto;
@@ -167,7 +167,7 @@
 
         .widget.dragging {
             opacity: 0.8;
-            transform: scale(1.05) rotate(2deg);
+            transform: scale(1.02);
             z-index: 1000;
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             cursor: grabbing;
@@ -180,9 +180,98 @@
         }
 
         .widget:hover {
-            transform: translateY(-4px);
             box-shadow: 0 8px 30px 0 var(--glass-shadow),
                         inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .widget-resize-handle {
+            position: absolute;
+            background: var(--primary-color);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .widget:hover .widget-resize-handle {
+            opacity: 0.6;
+        }
+
+        .widget-resize-handle:hover {
+            opacity: 1;
+        }
+
+        .resize-se {
+            right: 8px;
+            bottom: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 0 0 16px 0;
+            cursor: se-resize;
+            clip-path: polygon(100% 0, 100% 100%, 0 100%);
+        }
+
+        .resize-e {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 60px;
+            border-radius: 3px 0 0 3px;
+            cursor: e-resize;
+        }
+
+        .resize-s {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 6px;
+            border-radius: 0 0 3px 3px;
+            cursor: s-resize;
+        }
+
+        .alignment-guide {
+            position: fixed;
+            background: var(--primary-color);
+            pointer-events: none;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .alignment-guide.active {
+            opacity: 0.8;
+        }
+
+        .guide-horizontal {
+            height: 1px;
+            left: 0;
+            right: 0;
+        }
+
+        .guide-vertical {
+            width: 1px;
+            top: 0;
+            bottom: 0;
+        }
+
+        .guide-label {
+            position: absolute;
+            background: var(--primary-color);
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .guide-label.horizontal {
+            right: 8px;
+            top: -18px;
+        }
+
+        .guide-label.vertical {
+            top: 8px;
+            left: -30px;
         }
 
         .widget-header {
@@ -576,6 +665,25 @@
     <div class="background-overlay"></div>
 
     <div class="main-container">
+        <div class="alignment-guide guide-horizontal" id="guide-top">
+            <span class="guide-label horizontal">顶部对齐</span>
+        </div>
+        <div class="alignment-guide guide-horizontal" id="guide-center-h">
+            <span class="guide-label horizontal">水平居中</span>
+        </div>
+        <div class="alignment-guide guide-horizontal" id="guide-bottom">
+            <span class="guide-label horizontal">底部对齐</span>
+        </div>
+        <div class="alignment-guide guide-vertical" id="guide-left">
+            <span class="guide-label vertical">左对齐</span>
+        </div>
+        <div class="alignment-guide guide-vertical" id="guide-center-v">
+            <span class="guide-label vertical">垂直居中</span>
+        </div>
+        <div class="alignment-guide guide-vertical" id="guide-right">
+            <span class="guide-label vertical">右对齐</span>
+        </div>
+        
         <div class="clock-section">
             <div class="clock-container">
                 <div class="liquid-glass">
@@ -780,7 +888,7 @@
                 <span class="toggle-label">全屏自由拖动</span>
                 <div class="toggle active" id="free-drag-toggle"><div class="toggle-knob"></div></div>
             </div>
-            <button class="reset-btn" id="reset-widget-positions-btn" style="margin-top: 15px;">重置所有组件位置</button>
+            <button class="reset-btn" id="reset-widget-positions-btn" style="margin-top: 15px;">重置所有组件位置和尺寸</button>
         </div>
 
         <div class="settings-section">
@@ -1066,6 +1174,9 @@
                 </div>
                 <div class="widget-content">${template.content}</div>
                 <div class="widget-position" data-widget-id="${id}"></div>
+                <div class="widget-resize-handle resize-se" data-direction="se"></div>
+                <div class="widget-resize-handle resize-e" data-direction="e"></div>
+                <div class="widget-resize-handle resize-s" data-direction="s"></div>
             `;
             
             widget.querySelector('.widget-close').addEventListener('click', (e) => {
@@ -1077,12 +1188,15 @@
             });
             
             setupWidgetDrag(widget, id);
+            setupWidgetResize(widget, id);
             
             widgetsContainer.appendChild(widget);
             
             if (position) {
                 widget.style.left = position.x + 'px';
                 widget.style.top = position.y + 'px';
+                if (position.width) widget.style.width = position.width + 'px';
+                if (position.height) widget.style.height = position.height + 'px';
             } else {
                 const containerRect = widgetsContainer.getBoundingClientRect();
                 const randomOffset = Math.random() * 100;
@@ -1101,15 +1215,188 @@
             return id;
         }
 
+        function setupWidgetResize(widget, id) {
+            let isResizing = false;
+            let startX, startY, startWidth, startHeight;
+            let resizeDirection = '';
+            
+            const handles = widget.querySelectorAll('.widget-resize-handle');
+            
+            handles.forEach(handle => {
+                handle.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    isResizing = true;
+                    resizeDirection = handle.dataset.direction;
+                    
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startWidth = widget.offsetWidth;
+                    startHeight = widget.offsetHeight;
+                    
+                    widget.style.zIndex = '1001';
+                    e.preventDefault();
+                });
+            });
+            
+            const onMouseMove = (e) => {
+                if (!isResizing) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                if (resizeDirection.includes('e')) {
+                    widget.style.width = Math.max(200, startWidth + deltaX) + 'px';
+                }
+                if (resizeDirection.includes('s')) {
+                    widget.style.height = Math.max(150, startHeight + deltaY) + 'px';
+                }
+                
+                updateWidgetPositionIndicator(widget);
+            };
+            
+            const onMouseUp = () => {
+                if (!isResizing) return;
+                isResizing = false;
+                widget.style.zIndex = '';
+                saveWidgetsToDB();
+            };
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        }
+
+        const guides = {
+            top: document.getElementById('guide-top'),
+            centerH: document.getElementById('guide-center-h'),
+            bottom: document.getElementById('guide-bottom'),
+            left: document.getElementById('guide-left'),
+            centerV: document.getElementById('guide-center-v'),
+            right: document.getElementById('guide-right')
+        };
+
+        function showGuide(element, top, left) {
+            element.style.top = top + 'px';
+            element.style.left = left + 'px';
+            element.classList.add('active');
+        }
+
+        function hideGuide(element) {
+            element.classList.remove('active');
+        }
+
+        function hideAllGuides() {
+            Object.values(guides).forEach(g => hideGuide(g));
+        }
+
+        function updateAlignmentGuides(widget) {
+            hideAllGuides();
+            
+            const containerRect = widgetsContainer.getBoundingClientRect();
+            const widgetRect = {
+                left: widget.offsetLeft,
+                top: widget.offsetTop,
+                right: widget.offsetLeft + widget.offsetWidth,
+                bottom: widget.offsetTop + widget.offsetHeight,
+                centerX: widget.offsetLeft + widget.offsetWidth / 2,
+                centerY: widget.offsetTop + widget.offsetHeight / 2
+            };
+            
+            const snapThreshold = 10;
+            const center = containerRect.width / 2;
+            const centerSnapThreshold = 5;
+            
+            let snappedX = null;
+            let snappedY = null;
+            
+            if (Math.abs(widgetRect.left) < snapThreshold) {
+                showGuide(guides.left, widgetRect.top, 0);
+                snappedX = 0;
+            }
+            if (Math.abs(widgetRect.right - containerRect.width) < snapThreshold) {
+                showGuide(guides.right, widgetRect.top, containerRect.width);
+                snappedX = containerRect.width - widget.offsetWidth;
+            }
+            if (Math.abs(widgetRect.top) < snapThreshold) {
+                showGuide(guides.top, 0, widgetRect.left);
+                snappedY = 0;
+            }
+            if (Math.abs(widgetRect.bottom - containerRect.height) < snapThreshold) {
+                showGuide(guides.bottom, containerRect.height, widgetRect.left);
+                snappedY = containerRect.height - widget.offsetHeight;
+            }
+            if (Math.abs(widgetRect.centerX - center) < centerSnapThreshold) {
+                showGuide(guides.centerV, widgetRect.top, center);
+                snappedX = center - widget.offsetWidth / 2;
+            }
+            if (Math.abs(widgetRect.centerY - containerRect.height / 2) < centerSnapThreshold) {
+                showGuide(guides.centerH, containerRect.height / 2, widgetRect.left);
+                snappedY = containerRect.height / 2 - widget.offsetHeight / 2;
+            }
+            
+            document.querySelectorAll('.widget').forEach(other => {
+                if (other === widget) return;
+                
+                const otherRect = {
+                    left: other.offsetLeft,
+                    top: other.offsetTop,
+                    right: other.offsetLeft + other.offsetWidth,
+                    bottom: other.offsetTop + other.offsetHeight,
+                    centerX: other.offsetLeft + other.offsetWidth / 2,
+                    centerY: other.offsetTop + other.offsetHeight / 2
+                };
+                
+                if (Math.abs(widgetRect.left - otherRect.left) < snapThreshold) {
+                    showGuide(guides.left, widgetRect.top, otherRect.left);
+                    snappedX = otherRect.left;
+                }
+                if (Math.abs(widgetRect.left - otherRect.right) < snapThreshold) {
+                    showGuide(guides.left, widgetRect.top, otherRect.right);
+                    snappedX = otherRect.right;
+                }
+                if (Math.abs(widgetRect.right - otherRect.left) < snapThreshold) {
+                    showGuide(guides.right, widgetRect.top, otherRect.left);
+                    snappedX = otherRect.left - widget.offsetWidth;
+                }
+                if (Math.abs(widgetRect.right - otherRect.right) < snapThreshold) {
+                    showGuide(guides.right, widgetRect.top, otherRect.right);
+                    snappedX = otherRect.right - widget.offsetWidth;
+                }
+                if (Math.abs(widgetRect.top - otherRect.top) < snapThreshold) {
+                    showGuide(guides.top, otherRect.top, widgetRect.left);
+                    snappedY = otherRect.top;
+                }
+                if (Math.abs(widgetRect.top - otherRect.bottom) < snapThreshold) {
+                    showGuide(guides.top, otherRect.bottom, widgetRect.left);
+                    snappedY = otherRect.bottom;
+                }
+                if (Math.abs(widgetRect.bottom - otherRect.top) < snapThreshold) {
+                    showGuide(guides.bottom, otherRect.top, widgetRect.left);
+                    snappedY = otherRect.top - widget.offsetHeight;
+                }
+                if (Math.abs(widgetRect.bottom - otherRect.bottom) < snapThreshold) {
+                    showGuide(guides.bottom, otherRect.bottom, widgetRect.left);
+                    snappedY = otherRect.bottom - widget.offsetHeight;
+                }
+                if (Math.abs(widgetRect.centerX - otherRect.centerX) < centerSnapThreshold) {
+                    showGuide(guides.centerV, widgetRect.top, otherRect.centerX);
+                    snappedX = otherRect.centerX - widget.offsetWidth / 2;
+                }
+                if (Math.abs(widgetRect.centerY - otherRect.centerY) < centerSnapThreshold) {
+                    showGuide(guides.centerH, otherRect.centerY, widgetRect.left);
+                    snappedY = otherRect.centerY - widget.offsetHeight / 2;
+                }
+            });
+            
+            return { snappedX, snappedY };
+        }
+
         function setupWidgetDrag(widget, id) {
             let isDragging = false;
             let startX, startY, initialX, initialY;
-            let currentX, currentY;
-            
-            const positionEl = widget.querySelector('.widget-position');
             
             const onMouseDown = (e) => {
-                if (e.target.closest('.widget-close') || e.target.closest('button') || e.target.closest('input') || e.target.closest('.todo-checkbox') || e.target.closest('.todo-delete')) {
+                if (e.target.closest('.widget-close') || e.target.closest('button') || e.target.closest('input') || 
+                    e.target.closest('.todo-checkbox') || e.target.closest('.todo-delete') || e.target.classList.contains('widget-resize-handle')) {
                     return;
                 }
                 
@@ -1144,6 +1431,14 @@
                 widget.style.left = newX + 'px';
                 widget.style.top = newY + 'px';
                 
+                const snapped = updateAlignmentGuides(widget);
+                if (snapped.snappedX !== null) {
+                    widget.style.left = snapped.snappedX + 'px';
+                }
+                if (snapped.snappedY !== null) {
+                    widget.style.top = snapped.snappedY + 'px';
+                }
+                
                 updateWidgetPositionIndicator(widget);
             };
             
@@ -1152,9 +1447,7 @@
                 
                 isDragging = false;
                 widget.classList.remove('dragging');
-                
-                currentX = widget.offsetLeft;
-                currentY = widget.offsetTop;
+                hideAllGuides();
                 
                 saveWidgetsToDB();
             };
@@ -1189,12 +1482,14 @@
                         id: w.dataset.widgetId, 
                         type: w.dataset.widgetType,
                         x: w.offsetLeft,
-                        y: w.offsetTop
+                        y: w.offsetTop,
+                        width: w.offsetWidth,
+                        height: w.offsetHeight
                     };
                     widgets.push(widgetData);
                 });
                 
-                console.log(`📝 [保存] 保存 ${widgets.length} 个组件位置`);
+                console.log(`📝 [保存] 保存 ${widgets.length} 个组件位置和尺寸`);
                 
                 for(const widget of widgets) {
                     await dbPut(STORE_WIDGETS, widget);
@@ -1318,7 +1613,7 @@
         }
         
         document.getElementById('reset-widget-positions-btn').addEventListener('click', async () => {
-            if (!confirm('确定要重置所有小组件位置吗？')) return;
+            if (!confirm('确定要重置所有小组件位置和尺寸吗？')) return;
             
             const widgets = document.querySelectorAll('.widget');
             const containerRect = widgetsContainer.getBoundingClientRect();
@@ -1332,13 +1627,15 @@
                 
                 widget.style.left = x + 'px';
                 widget.style.top = y + 'px';
+                widget.style.width = '';
+                widget.style.height = '';
                 updateWidgetPositionIndicator(widget);
                 index++;
             });
             
             setTimeout(() => {
                 saveWidgetsToDB();
-                alert('✅ 组件位置已重置！');
+                alert('✅ 组件位置和尺寸已重置！');
             }, 100);
         });
         
@@ -1399,11 +1696,21 @@
                         console.log(`   创建组件 ${i+1}/${widgets.length}: ${w.type} (${w.id})`);
                         
                         const position = (w.x !== undefined && w.y !== undefined) 
-                            ? { x: w.x, y: w.y } 
+                            ? { x: w.x, y: w.y, width: w.width, height: w.height } 
                             : null;
                         
-                        createWidget(w.type, w.id, position);
-                        activeWidgets.push({id:w.id,type:w.type,x:w.x,y:w.y});
+                        const widgetId = createWidget(w.type, w.id, position);
+                        activeWidgets.push({id:w.id,type:w.type,x:w.x,y:w.y,width:w.width,height:w.height});
+                        
+                        if (w.width && w.height) {
+                            setTimeout(() => {
+                                const widget = document.querySelector(`[data-widget-id="${widgetId}"]`);
+                                if (widget) {
+                                    widget.style.width = w.width + 'px';
+                                    widget.style.height = w.height + 'px';
+                                }
+                            }, 50);
+                        }
                     }
                     
                     if (hasWeatherWidget) {
